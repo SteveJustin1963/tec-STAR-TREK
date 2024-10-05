@@ -1,6 +1,6 @@
 ### Star Trek spacecraft simulator 
 - Run on TEC-1
-- Reuse code from LLC TE17.4.
+ 
 - MINT version
 - ASM version, use 7 seg and 8x8 matrix
 
