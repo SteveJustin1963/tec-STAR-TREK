@@ -30,7 +30,7 @@
 
 
 
-### v2 st2.md
+### v2 st2.0.md
  update the game based on this image and gameplay
 
  
