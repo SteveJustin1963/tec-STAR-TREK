@@ -1,10 +1,7 @@
-
-
-
-///////////////////////////////
+ 
 
 ```
-//v1
+//mint
 
 // Define 7-segment patterns for digits 0-9 and some letters
 [#3F #06 #5B #4F #66 #6D #7D #07 #7F #6F #77 #7C #39 #5E #79 #71] d !
