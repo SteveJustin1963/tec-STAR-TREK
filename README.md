@@ -13,7 +13,9 @@
 ### MINT
  
 ### v1
+make it so
 ### v2
-
+more like https://www.myabandonware.com/game/star-trek-2n1
 ### V3
-remove 7 segement and key pad and only use terminal access with /C /K, keep the beep. rewrite code
+remove 7 segement and key pad and only use terminal access with /C /K, keep the beep.  
+
