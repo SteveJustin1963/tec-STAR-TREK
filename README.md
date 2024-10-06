@@ -75,7 +75,26 @@ To fully replicate the game still need to expand on this framework,
 need to keep at it - make it so!
 
 
-### v3
+### v2.1
+
+added the missing interrupts for input, to properly handle keypad input using interrupts. 
+
+Key changes in this updated version:
+1. Interrupt Handler:
+   - We define an interrupt handler `:Z` that checks if the interrupt is from the keypad (RST 1) and reads the keypad input if so.
+   - The handler stores the keypad input in a global variable `ki`.
+2. Interrupt Setup:
+   - The `:E` function sets up the interrupt handler and enables interrupts using the `#FB /X` command (which translates to the Z80 `EI` instruction).
+3. Keypad Input:
+   - The `:K` function now waits for the `ki` variable to be non-zero (set by the interrupt handler) instead of directly reading from the port.
+   - After reading the input, it clears `ki` for the next input.
+4. Main Program:
+   - We've added a `:M` function that enables interrupts and starts the game.
+5. Game Logic:
+   - The game logic remains mostly the same, but now it uses the interrupt-driven keypad input method.
+
+
+### v
 
 
 
