@@ -94,7 +94,26 @@ Key changes in this updated version:
    - The game logic remains mostly the same, but now it uses the interrupt-driven keypad input method.
 
 
+### v2.2
+
+Key changes in this updated version:
+
+1. Interrupt Handler (:Z function):
+   - We've removed the check for RST 1 as the TEC-1 uses RST 7 for its keypad interrupt.
+   - Added a short beep to confirm keypress, which can help in debugging and user feedback.
+2. Interrupt Setup (:E function):
+   - We now set up RST 7 (38h) to jump to our Z function. This is done by writing a JP (jump) instruction to the RST 7 vector.
+   - The command `#C3 38 /X 0 /X` writes the JP instruction (C3h) followed by the address of our Z function to memory address 38h.
+3. Keypad Input (:K function):
+   - This function remains the same, waiting for the interrupt handler to set a non-zero value in ki.
+
+These changes should make the interrupt-driven keypad input work correctly on the TEC-1. The interrupt handler will now be called whenever a key is pressed, storing the keypad value in ki and providing audio feedback.
+
+To use this program:
+1. Load the MINT interpreter onto your TEC-1.
+2. Enter this program into MINT.
+3. Run the program by typing `M` and pressing Enter.
+
+
 ### v
-
-
 
