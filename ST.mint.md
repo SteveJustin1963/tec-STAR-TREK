@@ -27,6 +27,7 @@
     500 (  // Delay
     )
   )
+20 (B)
 ;
 
 // Define a function to read keypad input
