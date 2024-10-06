@@ -12,3 +12,8 @@
 
 ### MINT
  
+### v1
+### v2
+
+### V3
+remove 7 segement and key pad and only use terminal access with /C /K, keep the beep. rewrite code
