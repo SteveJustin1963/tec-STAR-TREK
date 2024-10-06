@@ -29,6 +29,23 @@ are unexplored, you can use your long range sensors to try and find the enemy.
 
 ### MINT
 
-v1
+### v2
+
+### v1
+
+1. Display: We now use both digits of the 7-segment display.
+2. Keypad Input: The program reads input from the TEC-1's keypad using port #F800.
+3. Game Logic: 
+   - It's a simple "Space Game" where the player needs to hit the correct key when shown on the 7-segment display.
+   - The game generates a random target (displayed on the terminal in hex) and then shows a random number on the 7-segment display.
+   - The player needs to press the correct key (0-F) to match the displayed number.
+   - Pressing 'F' skips the current round.
+   - The game keeps track of the score over 10 rounds.
+4. Sound: We use beeps to indicate correct answers and button presses.
+5. Menu System: The program now has a main menu where the player can choose to play or view instructions.
+6. Random Number Generation: We implement a simple pseudo-random number generator using the remainder of the last operation.
+
+//////////
+
 
 
