@@ -2,11 +2,15 @@
 
 ![image](https://github.com/user-attachments/assets/4a36ce61-d774-4ce3-bb17-0ea3bcf334d0)
 
-- Run on TEC-1 
-- MINT version
-- ASM version, use 7 seg and 8x8 matrix
+- clone and enhance the Mike Mayfield Star Trek 1971
+- on the TEC-1
+- ASM output to 7 seg and 8x8 matrix
+- MINT outout to terminal, 7 seg and 8x8 matrix
+- simple sound effects
+- 
 
- ![image](https://github.com/user-attachments/assets/ef1bb6e8-f50b-4306-894e-6e8828a37bbc)
+### Samples from the 70s
+![image](https://github.com/user-attachments/assets/ef1bb6e8-f50b-4306-894e-6e8828a37bbc)
 ![image](https://github.com/user-attachments/assets/fdc6a2da-2944-4eef-9da6-b1becbb1abaa)
 ![image](https://github.com/user-attachments/assets/1b0dba19-1333-43c1-ae11-bb779bf43c1d)
 ![image](https://github.com/user-attachments/assets/746f2dc9-429d-429e-8d4a-fc726633bc40)
