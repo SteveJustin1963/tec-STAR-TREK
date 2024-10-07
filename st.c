@@ -12,12 +12,17 @@ int t = 10;            // Photon torpedoes
 int se = 0;            // Shield energy
 int e = 3000;          // Free energy
 
-// Function prototypes (declarations)
+// Game sector map grid
+char grid[10][10];     // 10x10 grid representing the sector
+
+// Function prototypes
 void print_string(const char *str);
 void print_newline();
 void print_number(int num);
 char get_input();
 int random_number();
+void place_objects_in_grid();
+void update_klingon_positions();
 void short_range_scan();
 void long_range_scan();
 void sensors();
@@ -63,20 +68,85 @@ char get_input() {
 
 // Function to generate a random number between 1 and 10
 int random_number() {
-    return (rand() % 10) + 1;
+    return (rand() % 10);
+}
+
+// Function to place objects in the grid
+void place_objects_in_grid() {
+    // Clear the grid
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            grid[i][j] = ' ';  // Empty space
+        }
+    }
+
+    // Place the player's ship (Enterprise) at its current position
+    grid[sx][sy] = 'E';  // Player's ship
+    
+    // Place random stars ('.')
+    for (int i = 0; i < 5; i++) {
+        int star_x = random_number();
+        int star_y = random_number();
+        grid[star_x][star_y] = '.';
+    }
+
+    // Place Klingon ships ('K')
+    for (int i = 0; i < k; i++) {
+        int klingon_x = random_number();
+        int klingon_y = random_number();
+        if (grid[klingon_x][klingon_y] == ' ') {
+            grid[klingon_x][klingon_y] = 'K';
+        }
+    }
+
+    // Place starbases ('B')
+    for (int i = 0; i < b; i++) {
+        int base_x = random_number();
+        int base_y = random_number();
+        if (grid[base_x][base_y] == ' ') {
+            grid[base_x][base_y] = 'B';
+        }
+    }
+}
+
+// Function to update Klingon ship positions
+void update_klingon_positions() {
+    // Move each Klingon ship randomly to an adjacent space
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            if (grid[i][j] == 'K') {
+                // Clear the current position
+                grid[i][j] = ' ';
+
+                // Move Klingon ship to a random nearby position
+                int new_x = i + (random_number() % 3 - 1);  // Move up/down or stay
+                int new_y = j + (random_number() % 3 - 1);  // Move left/right or stay
+                
+                // Ensure new position is within bounds
+                if (new_x >= 0 && new_x < 10 && new_y >= 0 && new_y < 10 && grid[new_x][new_y] == ' ') {
+                    grid[new_x][new_y] = 'K';  // Move the Klingon to the new position
+                } else {
+                    grid[i][j] = 'K';  // Reset to original position if the move is invalid
+                }
+            }
+        }
+    }
 }
 
 // Function to perform a short-range scan (SRS)
 void short_range_scan() {
     print_string("Short Range Scan (SRS):"); print_newline();
     print_string("Current Sector (X,Y): "); print_number(x); print_string(", "); print_number(y); print_newline();
+    
+    // Display the grid
     print_string("+-------------------+"); print_newline();
     for (int i = 0; i < 10; i++) {
-        if (i == sx && i == sy) {
-            print_string("|   Ship detected   |"); print_newline();  // Simulate detecting an object (e.g., Klingon)
-        } else {
-            print_string("|                   |"); print_newline();
+        putchar('|');
+        for (int j = 0; j < 10; j++) {
+            putchar(grid[i][j]);  // Print each cell in the grid
         }
+        putchar('|');
+        print_newline();
     }
     print_string("+-------------------+"); print_newline();
 }
@@ -87,7 +157,7 @@ void long_range_scan() {
     for (int i = x - 1; i <= x + 1; i++) {
         for (int j = y - 1; j <= y + 1; j++) {
             print_string("| Quadrant "); print_number(i); print_string(", "); print_number(j);
-            print_string(" | Klingons: "); print_number(random_number());
+            print_string(" | Klingons: "); print_number(random_number() % 5);
             print_string(" | Starbases: "); print_number(random_number() % 2);  // Randomize for now
             print_newline();
         }
@@ -130,6 +200,9 @@ void navigate() {
     sx = random_number();  // Randomly set subsector
     sy = random_number();
     sd--;  // Decrease stardate
+
+    // Place objects and update Klingons
+    place_objects_in_grid();
     display_map();
     display_stats();
 }
@@ -151,7 +224,12 @@ void display_map() {
     print_string("SECTOR : "); print_number(x); print_string(", "); print_number(y); print_newline();
     print_string("+-------------------+"); print_newline();
     for (int i = 0; i < 10; i++) {
-        print_string("|                   |"); print_newline();
+        putchar('|');
+        for (int j = 0; j < 10; j++) {
+            putchar(grid[i][j]);  // Print each cell in the grid
+        }
+        putchar('|');
+        print_newline();
     }
     print_string("+-------------------+"); print_newline();
 }
@@ -180,6 +258,9 @@ void game_loop() {
             not_implemented();  // Ship's computer not implemented
         }
 
+        // Update Klingon positions after each action
+        update_klingon_positions();
+
         // Check for game end conditions
         if (sd == 0) {
             print_string("Mission failed!"); print_newline();
@@ -203,6 +284,9 @@ void start_game() {
     
     // Simulate delay for 10000 cycles (this can be skipped in real C)
     for (int i = 0; i < 10000000; i++) {}
+
+    // Place objects in the initial sector
+    place_objects_in_grid();
 
     game_loop();  // Start the game loop
 }
