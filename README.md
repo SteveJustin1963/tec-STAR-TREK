@@ -6,7 +6,7 @@
 - use all outputs, lcd, 7 seg, 8x8 and terminal, simple sound effects
 
 ### code 
-- st.c ; wint code, work in progress
+- st.c mint code not ready
 
 
 
