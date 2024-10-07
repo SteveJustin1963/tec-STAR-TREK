@@ -5,5 +5,8 @@
 - clone and enhance the Mike Mayfield Star Trek 1971 for the TEC-1
 - use all outputs, lcd, 7 seg, 8x8 and terminal, simple sound effects
 
+### mint code
+st.c
+
 
  
