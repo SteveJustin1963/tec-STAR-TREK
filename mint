@@ -67,7 +67,7 @@
 
 // Function to generate a random number
 :R
-  /r 1 + 10 %  
+  /r 1 + 10 / /r  
   // Use remainder of last operation, add 1, mod 10
 ;
 
