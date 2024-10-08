@@ -59,7 +59,7 @@ This covers all the implemented game logic so far
 
 
 
-###  *pseudocode**  
+###  pseudocode
 ```
 // Game Initialization:
 
