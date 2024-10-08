@@ -67,7 +67,7 @@ Initialize galaxy map with sectors (NxN grid)
 Place Klingon ships (K), Starbases ($), Stars (*), and Planets (x) randomly on the map
 Set player's initial position (O)
 Set initial energy, shields, and photon torpedoes
-```
+ 
 
 // Movement Logic (NAV):
 
