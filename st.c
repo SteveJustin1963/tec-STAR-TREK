@@ -1,9 +1,9 @@
-; c code for faster testing before we make mint code
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 
 #define MAP_SIZE 8
 #define MAX_KLINGONS 3
@@ -56,6 +56,8 @@ void manageEnergy(int amount);
 void updateMap();
 void handleInput();
 void StarbaseSafeZone();
+void displayCommandList();
+void displayMap();
 
 // Initialize the game
 void initializeGame() {
@@ -73,8 +75,42 @@ void initializeGame() {
     game.enterprise.col = rand() % MAP_SIZE;
     game.map[game.enterprise.row][game.enterprise.col] = ENTERPRISE;
     
-    // Place Klingons, Starbases, Stars, and Planets
-    // (Implementation omitted for brevity, but would involve random placement)
+    // Place Klingons
+    for (int i = 0; i < MAX_KLINGONS; i++) {
+        do {
+            game.klingons[i].row = rand() % MAP_SIZE;
+            game.klingons[i].col = rand() % MAP_SIZE;
+        } while (game.map[game.klingons[i].row][game.klingons[i].col] != EMPTY);
+        game.map[game.klingons[i].row][game.klingons[i].col] = KLINGON;
+        game.klingons[i].health = 100;
+    }
+
+    // Place Starbases
+    for (int i = 0; i < MAX_STARBASES; i++) {
+        do {
+            game.starbases[i].row = rand() % MAP_SIZE;
+            game.starbases[i].col = rand() % MAP_SIZE;
+        } while (game.map[game.starbases[i].row][game.starbases[i].col] != EMPTY);
+        game.map[game.starbases[i].row][game.starbases[i].col] = STARBASE;
+    }
+
+    // Place Stars
+    for (int i = 0; i < MAX_STARS; i++) {
+        do {
+            game.stars[i].row = rand() % MAP_SIZE;
+            game.stars[i].col = rand() % MAP_SIZE;
+        } while (game.map[game.stars[i].row][game.stars[i].col] != EMPTY);
+        game.map[game.stars[i].row][game.stars[i].col] = STAR;
+    }
+
+    // Place Planets
+    for (int i = 0; i < MAX_PLANETS; i++) {
+        do {
+            game.planets[i].row = rand() % MAP_SIZE;
+            game.planets[i].col = rand() % MAP_SIZE;
+        } while (game.map[game.planets[i].row][game.planets[i].col] != EMPTY);
+        game.map[game.planets[i].row][game.planets[i].col] = PLANET;
+    }
     
     game.energy = 3000;
     game.shields = 100;
@@ -96,6 +132,7 @@ void NAV(int row, int col) {
             game.map[row][col] = ENTERPRISE;
             manageEnergy(-energy_cost);
             updateMap();
+            printf("Moved to sector (%d, %d). Energy cost: %d\n", row, col, energy_cost);
         } else {
             printf("Not enough energy for this move.\n");
         }
@@ -120,6 +157,8 @@ void SRS() {
                     case STAR: printf("* "); break;
                     case PLANET: printf("x "); break;
                 }
+            } else {
+                printf("  ");
             }
         }
         printf("\n");
@@ -162,9 +201,31 @@ void PHA() {
             manageEnergy(-energy_to_use);
             
             // Find closest Klingon and apply damage
-            // (Implementation omitted for brevity)
+            int closest_distance = MAP_SIZE * 2;
+            int closest_index = -1;
+            for (int i = 0; i < MAX_KLINGONS; i++) {
+                if (game.klingons[i].health > 0) {
+                    int distance = abs(game.klingons[i].row - game.enterprise.row) +
+                                   abs(game.klingons[i].col - game.enterprise.col);
+                    if (distance < closest_distance) {
+                        closest_distance = distance;
+                        closest_index = i;
+                    }
+                }
+            }
             
-            printf("Phasers fired with %d energy.\n", energy_to_use);
+            if (closest_index != -1) {
+                int damage = energy_to_use / (closest_distance + 1);
+                game.klingons[closest_index].health -= damage;
+                printf("Hit Klingon for %d damage!\n", damage);
+                if (game.klingons[closest_index].health <= 0) {
+                    printf("Klingon destroyed!\n");
+                    game.map[game.klingons[closest_index].row][game.klingons[closest_index].col] = EMPTY;
+                    game.klingons[closest_index].health = 0;
+                }
+            } else {
+                printf("No Klingons in range.\n");
+            }
         } else {
             printf("Invalid energy amount.\n");
         }
@@ -178,10 +239,37 @@ void TOR() {
     if (AIM() && game.torpedoes > 0) {
         game.torpedoes--;
         
-        // Calculate hit probability and damage
-        // (Implementation omitted for brevity)
+        // Find closest Klingon
+        int closest_distance = MAP_SIZE * 2;
+        int closest_index = -1;
+        for (int i = 0; i < MAX_KLINGONS; i++) {
+            if (game.klingons[i].health > 0) {
+                int distance = abs(game.klingons[i].row - game.enterprise.row) +
+                               abs(game.klingons[i].col - game.enterprise.col);
+                if (distance < closest_distance) {
+                    closest_distance = distance;
+                    closest_index = i;
+                }
+            }
+        }
         
-        printf("Torpedo fired.\n");
+        if (closest_index != -1) {
+            int hit_chance = 100 - (closest_distance * 10);
+            if (rand() % 100 < hit_chance) {
+                int damage = 50 + (rand() % 51);  // 50-100 damage
+                game.klingons[closest_index].health -= damage;
+                printf("Torpedo hit! Dealt %d damage to Klingon.\n", damage);
+                if (game.klingons[closest_index].health <= 0) {
+                    printf("Klingon destroyed!\n");
+                    game.map[game.klingons[closest_index].row][game.klingons[closest_index].col] = EMPTY;
+                    game.klingons[closest_index].health = 0;
+                }
+            } else {
+                printf("Torpedo missed!\n");
+            }
+        } else {
+            printf("No Klingons in range.\n");
+        }
     } else {
         printf("No lock-on or no torpedoes left.\n");
     }
@@ -211,8 +299,19 @@ void SHE(const char* action) {
 // Docking
 void DOCK() {
     bool starbase_nearby = false;
-    // Check if a starbase is in an adjacent sector
-    // (Implementation omitted for brevity)
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            int r = game.enterprise.row + i;
+            int c = game.enterprise.col + j;
+            if (r >= 0 && r < MAP_SIZE && c >= 0 && c < MAP_SIZE) {
+                if (game.map[r][c] == STARBASE) {
+                    starbase_nearby = true;
+                    break;
+                }
+            }
+        }
+        if (starbase_nearby) break;
+    }
     
     if (starbase_nearby) {
         game.is_docked = true;
@@ -228,8 +327,19 @@ void DOCK() {
 // Planet Landing
 void LAND() {
     bool planet_nearby = false;
-    // Check if a planet is in the same sector
-    // (Implementation omitted for brevity)
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            int r = game.enterprise.row + i;
+            int c = game.enterprise.col + j;
+            if (r >= 0 && r < MAP_SIZE && c >= 0 && c < MAP_SIZE) {
+                if (game.map[r][c] == PLANET) {
+                    planet_nearby = true;
+                    break;
+                }
+            }
+        }
+        if (planet_nearby) break;
+    }
     
     if (planet_nearby) {
         // Analyze planet for habitability
@@ -249,13 +359,30 @@ void LAND() {
 // Planet Orbiting
 void ORBIT() {
     bool planet_nearby = false;
-    // Check if a planet is in the same sector
-    // (Implementation omitted for brevity)
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            int r = game.enterprise.row + i;
+            int c = game.enterprise.col + j;
+            if (r >= 0 && r < MAP_SIZE && c >= 0 && c < MAP_SIZE) {
+                if (game.map[r][c] == PLANET) {
+                    planet_nearby = true;
+                    break;
+                }
+            }
+        }
+        if (planet_nearby) break;
+    }
     
     if (planet_nearby) {
         printf("Orbiting planet. Scanning surface...\n");
-        // Perform surface scan (implementation omitted)
+        // Perform surface scan
+        printf("Scan complete. Planet has:\n");
+        printf("- Atmosphere: %s\n", (rand() % 2 == 0) ? "Breathable" : "Toxic");
+        printf("- Water: %s\n", (rand() % 2 == 0) ? "Present" : "Absent");
+        printf("- Life signs: %s\n", (rand() % 2 == 0) ? "Detected" : "None detected");
     } else {
+        printf("No planet nearby to orbit.\n");
+} else {
         printf("No planet nearby to orbit.\n");
     }
 }
@@ -270,8 +397,29 @@ bool KlingonDetection() {
 
 // Klingon Avoidance near Starbases
 void KlingonAvoidance() {
-    // For each Klingon, check proximity to Starbases and adjust movement
-    // (Implementation omitted for brevity)
+    for (int i = 0; i < MAX_KLINGONS; i++) {
+        if (game.klingons[i].health > 0) {
+            for (int j = 0; j < MAX_STARBASES; j++) {
+                int distance = abs(game.klingons[i].row - game.starbases[j].row) +
+                               abs(game.klingons[i].col - game.starbases[j].col);
+                if (distance <= 1) {
+                    // Move Klingon away from Starbase
+                    int dr = game.klingons[i].row - game.starbases[j].row;
+                    int dc = game.klingons[i].col - game.starbases[j].col;
+                    int new_row = game.klingons[i].row + (dr != 0 ? dr / abs(dr) : 0);
+                    int new_col = game.klingons[i].col + (dc != 0 ? dc / abs(dc) : 0);
+                    
+                    if (new_row >= 0 && new_row < MAP_SIZE && new_col >= 0 && new_col < MAP_SIZE &&
+                        game.map[new_row][new_col] == EMPTY) {
+                        game.map[game.klingons[i].row][game.klingons[i].col] = EMPTY;
+                        game.klingons[i].row = new_row;
+                        game.klingons[i].col = new_col;
+                        game.map[new_row][new_col] = KLINGON;
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Aiming and Lock-On
@@ -320,14 +468,68 @@ void updateMap() {
     // Update enterprise's new position
     game.map[game.enterprise.row][game.enterprise.col] = ENTERPRISE;
     
-    // Update Klingon positions (movement logic omitted for brevity)
+    // Update Klingon positions (simple movement)
+    for (int i = 0; i < MAX_KLINGONS; i++) {
+        if (game.klingons[i].health > 0) {
+            int dr = rand() % 3 - 1;  // -1, 0, or 1
+            int dc = rand() % 3 - 1;  // -1, 0, or 1
+            int new_row = game.klingons[i].row + dr;
+            int new_col = game.klingons[i].col + dc;
+            
+            if (new_row >= 0 && new_row < MAP_SIZE && new_col >= 0 && new_col < MAP_SIZE &&
+                game.map[new_row][new_col] == EMPTY) {
+                game.map[game.klingons[i].row][game.klingons[i].col] = EMPTY;
+                game.klingons[i].row = new_row;
+                game.klingons[i].col = new_col;
+                game.map[new_row][new_col] = KLINGON;
+            }
+        }
+    }
 }
 
-// Handle Input
+// Display the command list
+void displayCommandList() {
+    printf("\nCommand List:\n");
+    printf("NAV <row> <col> - Navigate to a new position\n");
+    printf("SRS - Short Range Scan\n");
+    printf("LRS - Long Range Scan\n");
+    printf("PHA - Fire Phasers\n");
+    printf("TOR - Fire Photon Torpedoes\n");
+    printf("SHE <raise/lower> - Manage Shields\n");
+    printf("DOCK - Dock with a nearby Starbase\n");
+    printf("LAND - Land on a nearby Planet\n");
+    printf("ORBIT - Orbit a nearby Planet\n");
+    printf("QUIT - Exit the game\n");
+}
+
+// Display the current map
+void displayMap() {
+    printf("\nCurrent Map:\n");
+    for (int i = 0; i < MAP_SIZE; i++) {
+        for (int j = 0; j < MAP_SIZE; j++) {
+            switch(game.map[i][j]) {
+                case EMPTY: printf(". "); break;
+                case ENTERPRISE: printf("E "); break;
+                case KLINGON: printf("K "); break;
+                case STARBASE: printf("$ "); break;
+                case STAR: printf("* "); break;
+                case PLANET: printf("x "); break;
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+// Handle user input
 void handleInput() {
     char command[10];
     int row, col;
     
+    displayMap();
+    displayCommandList();
+    
+    printf("\nEnergy: %d | Shields: %d | Torpedoes: %d\n", game.energy, game.shields, game.torpedoes);
     printf("Enter command: ");
     scanf("%s", command);
     
@@ -354,6 +556,9 @@ void handleInput() {
         LAND();
     } else if (strcmp(command, "ORBIT") == 0) {
         ORBIT();
+    } else if (strcmp(command, "QUIT") == 0) {
+        printf("Thanks for playing! Goodbye.\n");
+        exit(0);
     } else {
         printf("Invalid command.\n");
     }
@@ -361,8 +566,29 @@ void handleInput() {
 
 // Starbase Safe Zone
 void StarbaseSafeZone() {
-    // Prevent Klingons from entering sectors adjacent to Starbases
-    // (Implementation omitted for brevity)
+    for (int i = 0; i < MAX_KLINGONS; i++) {
+        if (game.klingons[i].health > 0) {
+            for (int j = 0; j < MAX_STARBASES; j++) {
+                int distance = abs(game.klingons[i].row - game.starbases[j].row) +
+                               abs(game.klingons[i].col - game.starbases[j].col);
+                if (distance <= 1) {
+                    // Move Klingon away from Starbase (same as in KlingonAvoidance)
+                    int dr = game.klingons[i].row - game.starbases[j].row;
+                    int dc = game.klingons[i].col - game.starbases[j].col;
+                    int new_row = game.klingons[i].row + (dr != 0 ? dr / abs(dr) : 0);
+                    int new_col = game.klingons[i].col + (dc != 0 ? dc / abs(dc) : 0);
+                    
+                    if (new_row >= 0 && new_row < MAP_SIZE && new_col >= 0 && new_col < MAP_SIZE &&
+                        game.map[new_row][new_col] == EMPTY) {
+                        game.map[game.klingons[i].row][game.klingons[i].col] = EMPTY;
+                        game.klingons[i].row = new_row;
+                        game.klingons[i].col = new_col;
+                        game.map[new_row][new_col] = KLINGON;
+                    }
+                }
+            }
+        }
+    }
 }
 
 int main() {
@@ -377,8 +603,25 @@ int main() {
             }
         }
         StarbaseSafeZone();
+        updateMap();
         
-        // Check win/lose conditions (implementation omitted)
+        // Check win/lose conditions
+        int klingons_left = 0;
+        for (int i = 0; i < MAX_KLINGONS; i++) {
+            if (game.klingons[i].health > 0) {
+                klingons_left++;
+            }
+        }
+        
+        if (klingons_left == 0) {
+            printf("Congratulations! You've defeated all Klingons and won the game!\n");
+            break;
+        }
+        
+        if (game.energy <= 0) {
+            printf("Game Over. Your ship has run out of energy.\n");
+            break;
+        }
     }
     
     return 0;
