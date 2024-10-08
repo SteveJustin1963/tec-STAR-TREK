@@ -382,8 +382,6 @@ void ORBIT() {
         printf("- Life signs: %s\n", (rand() % 2 == 0) ? "Detected" : "None detected");
     } else {
         printf("No planet nearby to orbit.\n");
-} else {
-        printf("No planet nearby to orbit.\n");
     }
 }
 
