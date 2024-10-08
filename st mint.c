@@ -1,4 +1,4 @@
-```
+ 
 // Star Trek Game in MINT
 
 // Game state variables
@@ -146,4 +146,4 @@
 
 // Run the game
 I
-```
+ 
