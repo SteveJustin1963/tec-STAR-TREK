@@ -1,5 +1,5 @@
-///////////////////////////
 ```
+ 
 Game State Variables:
 x - Current sector X coordinate
 y - Current sector Y coordinate
@@ -25,8 +25,8 @@ o - Used in function K for temporary storage
 p - Used in function K for temporary storage
 
 Note: Variables q through z are currently unused and available for future expansions or additional features.
-```
-```
+ 
+ 
 // Game state variables
 0 x ! 0 y !
 // Current sector coordinates (x, y)
@@ -242,9 +242,9 @@ Note: Variables q through z are currently unused and available for future expans
 // Run the game
 M
 
-```
+ 
 /////////////////////////
-```
+ 
 // Star Trek Game in MINT
 
 // Game state variables
@@ -515,12 +515,12 @@ M
 
 // Run the game
 I
-```
+ 
 
 
 
 ///////////////////////////////////// 
-```
+ 
 // Star Trek Game in MINT
 
 // Game state variables
@@ -669,5 +669,6 @@ I
 // Run the game
 I
  
-```
+ 
 
+```
