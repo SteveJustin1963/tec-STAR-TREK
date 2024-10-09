@@ -16,6 +16,8 @@
 // Shield energy (se)
 3000 h !
 // Free energy (e)
+/F m !
+// Weapons lock status
 
 // Galaxy map (8x8), each quadrant represented as a byte
 [ 
@@ -183,12 +185,12 @@
     `3) SHIELD CONTROL` C /N
     `4) SENSORS` C /N
     `5) SHIP'S COMPUTER` C /N
-    J m!
-    m 1 = ( I )
-    m 2 = ( `Weapons not implemented` C /N )
-    m 3 = ( `Shield control not implemented` C /N )
-    m 4 = ( `Sensors not implemented` C /N )
-    m 5 = ( `Ship's computer not implemented` C /N )
+    J k!
+    k 1 = ( I )
+    k 2 = ( N )
+    k 3 = ( `Shield control not implemented` C /N )
+    k 4 = ( `Sensors not implemented` C /N )
+    k 5 = ( `Ship's computer not implemented` C /N )
     c 0 = ( `Mission failed!` C /W )
     d 0 = ( `Victory! All Klingons destroyed!` C /W )
   )
@@ -204,6 +206,60 @@
   `Good luck, Captain!` C /N
   10000 ( )
   L  
+;
+
+// Function for weapons system
+:N
+  `Weapons Control` C /N
+  `1) Aim` C /N
+  `2) Fire` C /N
+  `3) Return to main menu` C /N
+  J k!
+  k 1 = ( O )
+  k 2 = ( P )
+  k 3 = ( `Returning to main menu` C /N )
+;
+
+// Function for aiming
+:O
+  `Aiming...` C /N
+  100 F l!
+  l 80 < (
+    `Lock acquired!` C /N
+    /T m!
+  ) /E (
+    `Failed to acquire lock. Try again.` C /N
+    /F m!
+  )
+;
+
+// Function for firing
+:P
+  m /T = (
+    `Fire! (Y/N): ` C
+    /K k!
+    k 89 = k 121 = | (
+      `Firing phasers!` C /N
+      d 0 > (
+        100 F l!
+        l 90 > (
+          `Direct hit! 1 Klingon destroyed.` C /N
+          d 1 - d!
+        ) /E (
+          `Glancing hit. Klingon damaged.` C /N
+        )
+        d 0 = ( `All Klingons destroyed!` C /N )
+      ) /E (
+        `No Klingons in this sector.` C /N
+      )
+      /F m!
+    ) /E (
+      `Firing cancelled.` C /N
+    )
+  ) /E (
+    `No lock acquired. Aim first.` C /N
+  )
+  G
 ;
 
 // Run the game
