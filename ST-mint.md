@@ -25,7 +25,7 @@ o - Used in function K for temporary storage
 p - Used in function K for temporary storage
 
 Note: Variables q through z are currently unused and available for future expansions or additional features.
-
+```
 ```
 // Game state variables
 0 x ! 0 y !
