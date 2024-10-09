@@ -6,7 +6,9 @@ not so yet! still a work in progress
 ![image](https://github.com/user-attachments/assets/4a36ce61-d774-4ce3-bb17-0ea3bcf334d0)
 
 - clone and enhance the Mike Mayfield Star Trek 1971 for the TEC-1
-- use all outputs, lcd, 7 seg, 8x8 and terminal, simple sound effects
+- use terminal first , later all outputs; lcd, 7 seg, 8x8 and terminal
+- use simple 1bit sound effects, later sound chip
+- 
 
 ### list of all symbols:
 These symbols appear in the map to represent different objects and entities.
@@ -56,6 +58,30 @@ This covers all the implemented game logic so far
 21. **Starbase Safe Zones**: Starbases act as safe zones, where Klingons will not approach closer than one sector away.
 
  
+### Game code State Variables:
+x - Current sector X coordinate
+y - Current sector Y coordinate
+a - Current subsector X coordinate (formerly sx)
+b - Current subsector Y coordinate (formerly sy)
+c - Stardates remaining (formerly sd)
+d - Klingons remaining (formerly k)
+e - Starbases remaining (formerly b)
+f - Photon torpedoes (formerly t)
+g - Shield energy (formerly se)
+h - Free energy (formerly e)
 
+Map Variables:
+i - Galaxy map (8x8 array)
+j - Sector map (10x10 array)
+
+Temporary Variables (used in functions):
+k - Used in various functions for temporary storage
+l - Used in various functions for temporary storage
+m - Used in various functions for temporary storage
+n - Used in function K for temporary storage
+o - Used in function K for temporary storage
+p - Used in function K for temporary storage
+
+Note: Variables q through z are currently unused and available for future expansions or additional features.
 
 
