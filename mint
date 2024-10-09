@@ -1,4 +1,3 @@
-```
 // Game state variables
 0 x ! 0 y !
 // Current sector coordinates (x, y)
@@ -17,7 +16,7 @@
 3000 h !
 // Free energy (e)
 /F m !
-// Weapons lock status
+// Weapons lock status (m)
 
 // Galaxy map (8x8), each quadrant represented as a byte
 [ 
@@ -83,6 +82,7 @@
   `FREE ENERGY        ` C h D /N
   `KLINGONS REMAINING ` C d D /N
   `STARBASES REMAINING` C e D /N
+  `WEAPONS LOCK       ` C m /T = ( `ACQUIRED` ) /E ( `NOT ACQUIRED` ) C /N
 ;
 
 // Function to display sector map
@@ -119,6 +119,7 @@
   10 F b !
   c 1 - c !
   K
+  /F m !
   H G  
 ;
 
@@ -264,5 +265,3 @@
 
 // Run the game
 M
-
-```
