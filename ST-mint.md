@@ -1,5 +1,32 @@
 ///////////////////////////
 ```
+Game State Variables:
+x - Current sector X coordinate
+y - Current sector Y coordinate
+a - Current subsector X coordinate (formerly sx)
+b - Current subsector Y coordinate (formerly sy)
+c - Stardates remaining (formerly sd)
+d - Klingons remaining (formerly k)
+e - Starbases remaining (formerly b)
+f - Photon torpedoes (formerly t)
+g - Shield energy (formerly se)
+h - Free energy (formerly e)
+
+Map Variables:
+i - Galaxy map (8x8 array)
+j - Sector map (10x10 array)
+
+Temporary Variables (used in functions):
+k - Used in various functions for temporary storage
+l - Used in various functions for temporary storage
+m - Used in various functions for temporary storage
+n - Used in function K for temporary storage
+o - Used in function K for temporary storage
+p - Used in function K for temporary storage
+
+Note: Variables q through z are currently unused and available for future expansions or additional features.
+
+```
 // Game state variables
 0 x ! 0 y !
 // Current sector coordinates (x, y)
@@ -18,6 +45,8 @@
 3000 h !
 // Free energy (e)
 
+
+// code
 // Galaxy map (8x8), each quadrant represented as a byte
 [ 
   0 0 0 0 0 0 0 0
