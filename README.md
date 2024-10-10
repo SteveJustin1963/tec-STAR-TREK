@@ -9,9 +9,15 @@ not so yet! still a work in progress..do not use...under construction
 ![image](https://github.com/user-attachments/assets/4a36ce61-d774-4ce3-bb17-0ea3bcf334d0)
 
 - clone and enhance the Mike Mayfield Star Trek 1971 for the TEC-1
-- use terminal first , later all outputs; lcd, 7 seg, 8x8 and terminal
-- use simple 1bit sound effects, later sound chip
-- 
+- MINT
+  - use terminal, 1 bit sound
+- ASM 1 uses
+  - 6x 7 Seg LEDS, LCD, 8x8 and hex pad
+  - 1 bit sound effects
+- ASM 2 uses
+  - https://github.com/SteveJustin1963/tec-POV
+  - https://github.com/SteveJustin1963/tec-SPEECH
+  - https://github.com/SteveJustin1963/tec-76489-Sound-Generator 
 
 ### symbols
 - `O` Your ship (USS Enterprise)
