@@ -1,0 +1,163 @@
+:B 
+0 x ! 0 y !  
+0 a ! 0 b !  
+31 c !       // Stardates
+10 d !       // Klingons remaining
+2 e !        // Starbases remaining
+10 f !       // Photon torpedoes
+0 g !        // Shield energy
+3000 h !     // Free energy
+
+// Initialize sectors
+[ 
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+] i!
+
+[ 
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+  0 0 0 0 0 0 0 0
+] j!
+;
+
+// Function to handle wait/delay
+:Delay
+  /U ( 
+    0 = /W  // Loop ends if 0
+    1000 -  // Decrease count
+  )
+;
+
+// Function A with proper delay implemented
+:A
+  5 (  
+    #80 #F801 /O  
+    1000 Delay  // Added delay
+    0 #F801 /O  
+    1000 Delay  // Added delay
+  )
+;
+
+// Continuous check for command input
+:C
+  /U (
+    " /C  
+    " 0 = /W  
+  )
+  '  
+;
+
+// Display data
+:D . ;
+
+// Call input and action sequence
+:E /K A ;
+
+// Corrected handling for modulo operation
+:F /r 1 + $ % ;
+
+// Display status screen
+:G
+  `STARDATES REMAINING ` C c D /N
+  `SECTOR (X,Y)       ` C x D `, ` C y D /N
+  `SUBSECTOR (X,Y)    ` C a D `, ` C b D /N
+  `PHOTON TORPEDOES   ` C f D /N
+  `SHIELD ENERGY      ` C g D /N
+  `FREE ENERGY        ` C h D /N
+  `KLINGONS REMAINING ` C d D /N
+  `STARBASES REMAINING` C e D /N
+;
+
+// Display map with orbit and sector status
+:H
+  `SECTOR : ` C x D `, ` C y D /N
+  `+---------------+` C /N
+  8 (
+    8 (
+      /j 8 * /i + k!
+      j k ? l!
+      l 0 = ( `.` /C )
+      l 1 = ( `K` /C )
+      l 2 = ( `*` /C )
+      l 3 = ( `x` /C )
+      l 4 = ( `O` /C )
+      ` ` /C
+    )
+    /N
+  )
+  `+---------------+` C /N
+;
+
+// Orbit logic fixed for consistent updating
+:Orbit
+  a b = (  
+    a 4 = b 2 = (
+      x 1 + x 7 > ( 0 x ! )
+      y 1 + y 7 > ( 0 y ! )
+    )
+  )
+;
+
+// Get input coordinates
+:I
+  `Enter new sector X coordinate (0-7): ` C
+  J x !  // Use J to handle input for x
+  `Enter new sector Y coordinate (0-7): ` C
+  J y !  // Use J to handle input for y
+  x 0 < ( 0 x ! )  // Boundary checking
+  x 7 > ( 7 x ! )
+  y 0 < ( 0 y ! )
+  y 7 > ( 7 y ! )
+  8 F a !  // Subsector reset
+  8 F b !  // Subsector reset
+  c 1 - c !  // Decrease stardates
+  K
+  Orbit  
+  H G  // Display sector map and status
+;
+
+// Mission menu with handling for unimplemented features
+:L
+  /U (
+    `ENTER ONE OF THE FOLLOWING:` C /N
+    `1) NAVIGATION` C /N
+    `2) WEAPONS` C /N
+    `3) SHIELD CONTROL` C /N
+    `4) SENSORS` C /N
+    `5) SHIP'S COMPUTER` C /N
+    J m!
+    m 1 = ( I )
+    m 2 = ( `Weapons not implemented` C /N )
+    m 3 = ( `Shield control not implemented` C /N )
+    m 4 = ( `Sensors not implemented` C /N )
+    m 5 = ( `Ship's computer not implemented` C /N )
+    c 0 = ( `Mission failed!` C /N /W )
+    d 0 = ( `Victory! All Klingons destroyed!` C /N /W )
+  )
+;
+
+// Starting screen and mission description
+:M
+  `Star Trek Game` C /N
+  `You are the captain of the USS Enterprise.` C /N
+  `Your mission is to destroy 10 Klingon warships` C /N
+  `before stardate 1763.` C /N
+  `Use navigation to move between sectors.` C /N
+  `Good luck, Captain!` C /N
+  1000 Delay  // Added delay for dramatic effect
+  L  
+;
+
+M  // Run the game
