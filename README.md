@@ -1,3 +1,6 @@
+do not use...under construction
+
+
 # Star Trek game - Make it so!
 
 not so yet! still a work in progress
