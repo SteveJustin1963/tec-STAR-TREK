@@ -11,15 +11,32 @@ not so yet! still a work in progress
 - 
 
 ### list of all symbols:
-These symbols appear in the map to represent different objects and entities.
+> map
+```
+SECTOR: 1, 1
++-------------------+
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . K . . . .
+. . O * . . . . . .
+. . . x . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
++-------------------+
+```
 
-1. **O**: Your ship (USS Enterprise)
-2. **K**: Klingon ship
-3. **\***: Star
-4. **$**: Starbase
-5. **x**: Planet
-6. **000**: Empty sector (in long-range scans, shows no Klingons, Starbases, or Stars)
-7. 
+
+
+- `O` Your ship (USS Enterprise)
+- K Klingon ship
+- `*` Star
+- $ Starbase, and it orbits * on each map update
+- x Planet
+- `.` dots are empty sectors (in long-range scans, shows no Klingons, Starbases, or Stars)
+-  
 
 
  
