@@ -1,9 +1,9 @@
-do not use...under construction
 
 
 # Star Trek game - Make it so!
 
-not so yet! still a work in progress
+not so yet! still a work in progress..do not use...under construction
+
 
 
 ![image](https://github.com/user-attachments/assets/4a36ce61-d774-4ce3-bb17-0ea3bcf334d0)
