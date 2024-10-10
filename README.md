@@ -19,7 +19,9 @@ not so yet! still a work in progress..do not use...under construction
   - https://github.com/SteveJustin1963/tec-SPEECH
   - https://github.com/SteveJustin1963/tec-76489-Sound-Generator 
 
-### symbols
+### symbols / details
+ such as stars, planets, enemies (Klingons), and starbases within the current sector.
+ 
 - `O` Your ship (USS Enterprise)
 - K Klingon ship
 - `*` Star
@@ -28,9 +30,17 @@ not so yet! still a work in progress..do not use...under construction
 - `.` dots are empty sectors (in long-range scans, shows no Klingons, Starbases, or Stars)
 
 ### commands
-where are we ? enter `map` and we can see 
-```
-> map
+- commands entered at mint console `> `
+
+
+### `map` command
+- `map` shopw where are as `O`, is approx in the middle
+- whe called its refeshed and dynamic based on scan data 
+- scale is 10x10 light hours, about 72 AU (astronomical units)
+- its the same as a SRS (short-range scan)
+-  
+
+
 
 SECTOR: 1, 1
   +-------------------+
@@ -46,19 +56,14 @@ SECTOR: 1, 1
 ```
 
 
-
-
--  
-
-
  
 
 ### Game Mechanics:
 This covers all the implemented game logic so far
 
 1. **NAV**: Move between sectors using row, column format (input row, then column). Movement costs energy.
-2. **SRS**: Short-range scan reveals stars, planets, enemies (Klingons), and starbases within the current sector.
-3. **LRS**: Long-range scan displays a 3x3 grid of surrounding sectors, showing Klingons (K), Starbases ($), and Stars (*). Planets (x) are not detectable in LRS.
+2. **Map**: is short-range scan that reveals stars, planets, enemies (Klingons), and starbases within the current sector.
+3. **Scan**: is a long-range scan displays a 3x3 grid of surrounding sectors, showing Klingons (K), Starbases ($), and Stars (*). Planets (x) are not detectable in LRS.
 4. **PHA**: Fire phasers at Klingon ships in the same sector. Phasers cost energy and require a lock-on.
 5. **TOR**: Fire photon torpedoes at Klingons in the same sector. Torpedoes are limited in supply.
 6. **SHE**: Adjust shields, raising or lowering them to manage energy for defense. Shields absorb damage if raised during attacks.
