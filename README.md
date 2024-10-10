@@ -40,7 +40,7 @@ not so yet! still a work in progress..do not use...under construction
 - its the same as a SRS (short-range scan)
 -  
 
-
+```
 
 SECTOR: 1, 1
   +-------------------+
@@ -98,8 +98,7 @@ This code is a basic **Star Trek-themed game** written in the **MINT programming
 ### Main Objective:
 The player's mission is to destroy **10 Klingon warships** before the stardate reaches 0. The player navigates between sectors, and various actions can be taken from the mission menu, such as moving to different sectors or checking the ship's status. The game ends with either victory (all Klingons destroyed) or failure (if the stardate runs out).
 
-```
-```
+ 
 ### Code Breakdown:
 
 #### 1. **Variables and Initialization (`:B`)**
@@ -172,7 +171,7 @@ The `:M` function provides an introduction to the game, setting the scene for th
 - The player is given their mission: to **destroy 10 Klingon warships** before the stardate runs out.
 - After the introduction, the **Mission Menu** (`:L`) is displayed, allowing the player to start interacting with the game.
 
----
+ 
 
 ### Flow of the Game:
 1. The game starts by printing a mission briefing.
@@ -182,13 +181,12 @@ The `:M` function provides an introduction to the game, setting the scene for th
 5. The player must destroy Klingons to win, but the exact mechanism for combat is not implemented yet.
 6. The game ends with either victory or failure, based on stardates or Klingons.
 
----
-
+ 
 ### Key Missing Features:
 1. **Weapons, Shields, and Sensors**: These are marked as "not implemented." These would involve adding functionality for the player to engage in combat, raise shields, and scan sectors for Klingons or starbases.
 2. **Combat System**: The logic for firing photon torpedoes or fighting Klingons is not present. Implementing this would require additional game mechanics for combat.
 
----
+ 
 
 In summary, this code sets up the basic structure of a Star Trek-like game, allowing the player to move between sectors, keep track of resources, and visualize their surroundings. It's a work in progress, and additional features like weapons and combat need to be added to fully realize the game's potential.
  
