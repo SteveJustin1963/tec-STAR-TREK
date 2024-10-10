@@ -98,8 +98,8 @@ This code is a basic **Star Trek-themed game** written in the **MINT programming
 ### Main Objective:
 The player's mission is to destroy **10 Klingon warships** before the stardate reaches 0. The player navigates between sectors, and various actions can be taken from the mission menu, such as moving to different sectors or checking the ship's status. The game ends with either victory (all Klingons destroyed) or failure (if the stardate runs out).
 
----
-
+```
+```
 ### Code Breakdown:
 
 #### 1. **Variables and Initialization (`:B`)**
