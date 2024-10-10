@@ -22,10 +22,9 @@ not so yet! still a work in progress..do not use...under construction
 - `.` dots are empty sectors (in long-range scans, shows no Klingons, Starbases, or Stars)
 
 ### commands
-** map
->  
+where are we ? enter `map` and we can see 
 ```
-we get this, its the local map
+> map
 
 SECTOR: 1, 1
   +-------------------+
