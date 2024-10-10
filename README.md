@@ -13,32 +13,36 @@ not so yet! still a work in progress..do not use...under construction
 - use simple 1bit sound effects, later sound chip
 - 
 
-### list of all symbols:
-> map
-```
-SECTOR: 1, 1
-+-------------------+
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . K . . . .
-. . O * . . . . . .
-. . . x . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-. . . . . . . . . .
-+-------------------+
-```
-
-
-
+### symbols
 - `O` Your ship (USS Enterprise)
 - K Klingon ship
 - `*` Star
 - $ Starbase, and it orbits * on each map update
 - x Planet
 - `.` dots are empty sectors (in long-range scans, shows no Klingons, Starbases, or Stars)
+
+### commands
+** map
+>  
+```
+we get this, its the local map
+
+SECTOR: 1, 1
+  +-------------------+
+  |     *   K   *     |
+  |                   |
+  |   *               |
+  |                   |
+  |               *   |
+  |                   |
+  |   O   K           |  <-- last action
+  |                   |
+  +-------------------+
+```
+
+
+
+
 -  
 
 
