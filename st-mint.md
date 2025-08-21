@@ -281,3 +281,148 @@ H                   // Start main game loop
 
 # code no comments
 
+```
+:A
+0 x! 0 y!
+31 c!
+10 d!
+2 e!
+300 f!
+0 g!
+3000 h!
+[46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 75 46 46 46 46 46 46 46 46 36 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 42 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46] s!
+79 s 0?!
+`Star Trek Game` /N
+`Destroy ` d . ` Klingons before stardate runs out!` /N
+`Commands: 1=nav 2=map 3=aim 4=fire 5=shields 6=status` /N
+;
+
+:B
+`Stardates: ` c . /N
+`Position: (` x . `,` y . `)` /N
+`Torpedoes: ` f . /N
+`Shields: ` g 0 = (`DOWN`) /E (`UP`) /N
+`Energy: ` h . /N
+`Klingons: ` d . /N
+`Starbases: ` e . /N
+;
+
+:C
+`SECTOR MAP:` /N
+8(
+  8(
+    /j 8 * /i + t!
+    s t? /C 32 /C
+  )
+  /N
+)
+;
+
+:D
+`Enter X (0-7): `
+/K 48 - n!
+n 0 < (0 n!) n 7 > (7 n!)
+`Enter Y (0-7): `
+/K 48 - m!
+m 0 < (0 m!) m 7 > (7 m!)
+x 8 * y + t!
+46 s t?!
+n 8 * m + t!
+s t? o!
+n x! m y!
+o 75 = (
+  `ALERT: Klingon ship in this sector!` /N
+) /E (
+  79 s t?!
+)
+c 1 - c!
+`Moved to (` x . `,` y . `)` /N
+;
+
+:E
+x 8 * y + t!
+s t? 75 = (
+  `Lock acquired on Klingon!` /N
+  /T i!
+) /E (
+  `No target in this sector.` /N
+  /F i!
+)
+;
+
+:F
+f 0 = (
+  `No torpedoes remaining!` /N
+) /E (
+  i /T = (
+    `Firing torpedo...` /N
+    f 1 - f!
+    x 8 * y + t!
+    s t? 75 = (
+      `Klingon destroyed!` /N
+      46 s t?!
+      79 s t?!
+      d 1 - d!
+    ) /E (
+      `Shot missed - no target!` /N
+    )
+    /F i!
+  ) /E (
+    `No lock acquired! Use aim first.` /N
+  )
+)
+;
+
+:G
+g 0 = (
+  `Shields DOWN. Raise? (y/n): `
+  /K 121 = (
+    /T g!
+    `Shields UP.` /N
+    h 50 - h!
+  )
+) /E (
+  `Shields UP. Lower? (y/n): `
+  /K 121 = (
+    /F g!
+    `Shields DOWN.` /N
+    h 25 + h!
+  )
+)
+;
+
+:H
+A
+/U(
+  c 0 <= d 0 <= | /W
+  /N `Command: `
+  /K p!
+  p 49 = (D)
+  p 50 = (C)
+  p 51 = (E)
+  p 52 = (F)
+  p 53 = (G)
+  p 54 = (B)
+)
+c 0 <= (
+  `MISSION FAILED! Time ran out.` /N
+) /E (
+  d 0 <= (
+    `VICTORY! All Klingons destroyed!` /N
+  )
+)
+;
+
+:I
+75 s 20?!
+75 s 35?!
+75 s 50?!
+;
+
+:J
+I
+H
+;
+
+```
+
