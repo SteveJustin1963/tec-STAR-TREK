@@ -12,7 +12,7 @@ not so yet! still a work in progress..do not use...under construction
 - MINT
   - use terminal, 1 bit sound
 - ASM 1 uses
-  - 6x 7 Seg LEDS, LCD, 8x8 and hex pad
+  - 6x 7 Seg. LEDS, LCD, 8x8 and hex pad
   - 1 bit sound effects
 - ASM 2 uses
   - https://github.com/SteveJustin1963/tec-POV
@@ -34,8 +34,8 @@ not so yet! still a work in progress..do not use...under construction
 
 
 ### `map` command
-- `map` shopw where are as `O`, is approx in the middle
-- whe called its refeshed and dynamic based on scan data 
+- `map` show where are as `O`, is approx in the middle
+- whe called its refreshed and dynamic based on scan data 
 - scale is 10x10 light hours, about 72 AU (astronomical units)
 - its the same as a SRS (short-range scan)
 -  
