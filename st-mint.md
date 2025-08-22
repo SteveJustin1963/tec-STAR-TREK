@@ -592,6 +592,119 @@ c 0 <= (
 H
 ;
 ```
+# issues
+
+Looking at this MINT code line by line as an expert, I can spot several potential issues:
+
+## **Critical Issues:**
+
+### **1. Function C - Map Display Logic Problem**
+```mint
+64(
+  /i x 8 * y + = (79 /C) /E (
+    /i k = /i l = | /i m = | (75 /C) /E (46 /C)
+  )
+  32 /C
+  /i 1 + 8 % 0 = (/N)
+)
+```
+
+**Issue:** The logical operator precedence is wrong. The line:
+`/i k = /i l = | /i m = |`
+
+This evaluates as: `(((/i k =) (/i l =) |) (/i m =) |)`
+
+But we need: `/i k = (/i l = | /i m = |)`
+
+**Fix:** Should be:
+```mint
+/i k = /i l = /i m = | | (75 /C) /E (46 /C)
+```
+
+### **2. Input Validation Edge Case**
+```mint
+/K 48 - n!
+n 0 < (0 n!) n 7 > (7 n!)
+```
+
+**Issue:** If user presses a non-digit key (like space, letter), this could cause unexpected behavior.
+
+**Fix:** Add bounds checking:
+```mint
+/K 48 - n!
+n 0 < (0 n!) n 9 > (0 n!) n 7 > (7 n!)
+```
+
+### **3. Buffer Length Risk**
+Some functions are quite long. Function F is particularly risky:
+
+```mint
+:F
+f 0 = (
+  `No torpedoes!` /N
+) /E (
+  i /T = (
+    `Firing...` /N
+    f 1 - f!
+    x 8 * y + p!
+    p k = (
+      `Klingon destroyed!` /N
+      0 k! d 1 - d!
+    ) /E (
+      p l = (
+        `Klingon destroyed!` /N
+        0 l! d 1 - d!
+      ) /E (
+        p m = (
+          `Klingon destroyed!` /N
+          0 m! d 1 - d!
+        ) /E (
+          `Miss!` /N
+        )
+      )
+    )
+    /F i!
+  ) /E (
+    `No lock! Use aim first.` /N
+  )
+)
+;
+```
+
+**Issue:** This approaches MINT's 256-byte line limit and has deep nesting that could cause issues.
+
+## **Minor Issues:**
+
+### **4. Game Loop Logic**
+```mint
+/U(
+  c 0 <= d 0 <= | /W
+  ...
+)
+```
+
+**Potential Issue:** The `/W` condition might not behave exactly as expected. According to the manual, `/W` breaks when condition is false.
+
+### **5. Variable Collision Risk**
+Using variables: `c,d,f,g,h,i,k,l,m,n,o,p,t,x,y` (15 total)
+
+**Risk:** Variable `i` is used both for lock status AND as the automatic loop counter `/i`. This could cause conflicts.
+
+## **Corrected Version:**## **Key Fixes Applied:**
+
+1. **Fixed logical operator precedence** in map display: `| |` instead of `| /i m = |`
+
+2. **Resolved variable collision** - changed lock status from variable `i` to `j` to avoid conflict with loop counter `/i`
+
+3. **Consistent logic patterns** - all Klingon position checks now use the same `p k = p l = p m = | |` pattern
+
+## **Remaining Recommendations:**
+
+1. **Consider shortening Function F** - it's still quite long and could hit buffer limits
+2. **Add input sanitization** - check for non-digit inputs  
+3. **Test edge cases** - what happens when all Klingons are at position 0?
+
+The code should now be much more reliable and less prone to MINT interpreter issues!
 
 
 
