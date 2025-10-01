@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Star Trek 1977 - ASCII Game</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background-color: #000;
+      color: #00ff00;
+      margin: 0;
+      padding: 20px;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+    .game-container { max-width: 1000px; margin: 0 auto; }
+    .display {
+      border: 2px solid #00ff00;
+      padding: 20px;
+      margin: 10px 0;
+      background-color: #001100;
+    }
+    .galaxy-map, .sector-display {
+      font-family: 'Courier New', monospace;
+      white-space: pre;
+    }
+    .galaxy-map { font-size: 12px; }
+    .sector-display { font-size: 14px; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    button {
+      background-color: #003300;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    button:hover { background-color: #004400; }
+    input {
+      background-color: #001100;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 5px;
+      font-family: 'Courier New', monospace;
+      width: 60px;
+    }
+    .status {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+    .log {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      background-color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="display">
+      <h1>STAR TREK - STARDATE 2267.5</h1>
+      <p>THE FEDERATION IS AT WAR WITH THE KLINGON EMPIRE</p>
+      <p>YOUR MISSION: DESTROY ALL KLINGON SHIPS IN THE GALAXY</p>
+    </div>
+
+    <div class="display status">
+      <div>
+        <strong>USS ENTERPRISE STATUS:</strong><br>
+        Energy: <span id="energy">3000</span><br>
+        Torpedoes: <span id="torpedoes">10</span><br>
+        Shield: <span id="shields">100</span>%
+      </div>
+      <div>
+        <strong>POSITION:</strong><br>
+        Quadrant: <span id="quadrant">1,1</span><br>
+        Sector: <span id="sector">4,4</span><br>
+        Stardate: <span id="stardate">2267.5</span>
+      </div>
+      <div>
+        <strong>MISSION STATUS:</strong><br>
+        Klingons Left: <span id="klingons-left">15</span><br>
+        Time Left: <span id="time-left">30</span> stardates<br>
+        Condition: <span id="condition">GREEN</span>
+      </div>
+    </div>
+
+    <div class="display">
+      <strong>GALAXY MAP (8x8 QUADRANTS)</strong>
+      <div class="galaxy-map" id="galaxy-map"></div>
+      <p>Numbers show: Klingons*100 + Starbases*10 + Stars</p>
+    </div>
+
+    <div class="display">
+      <strong>LOCAL SECTOR SCAN</strong>
+      <div class="sector-display" id="sector-display"></div>
+      <p>E=Enterprise, K=Klingon, B=Starbase, *=Star, .=Empty</p>
+    </div>
+
+    <div class="controls">
+      <div>
+        <h3>NAVIGATION</h3>
+        <p>Direction (1-8): <input type="number" id="direction" min="1" max="8" value="1"></p>
+        <p>Distance (0.1-8): <input type="number" id="distance" min="0.1" max="8" step="0.1" value="1"></p>
+        <button onclick="navigate()">NAVIGATE</button>
+        <button onclick="longRangeScan()">LONG RANGE SCAN</button>
+      </div>
+      <div>
+        <h3>COMBAT</h3>
+        <p>Phaser Energy: <input type="number" id="phaser-energy" min="1" max="1000" value="100"></p>
+        <button onclick="firePhasers()">FIRE PHASERS</button>
+        <button onclick="fireTorpedo()">FIRE TORPEDO</button>
+        <button onclick="raiseShields()">SHIELDS UP</button>
+      </div>
+    </div>
+
+    <div class="display">
+      <strong>COMMUNICATION LOG</strong>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    // === Game state and helpers (same as before) ===
+    let game = {
+      energy: 3000, torpedoes: 10, shields: 100, shieldsUp: false,
+      quadrantX: 0, quadrantY: 0, sectorX: 3, sectorY: 3,
+      stardate: 2267.5, timeLeft: 30, klingonsLeft: 15,
+      condition: 'GREEN', galaxy: [], currentQuadrant: [],
+      gameOver: false, lastDirection: 2
+    };
+
+    const directions = [
+      [0, -1],[1, -1],[1, 0],[1, 1],[0, 1],[-1, 1],[-1, 0],[-1, -1]
+    ];
+
+    // ... (all your initializeGame, generateCurrentQuadrant, combat, scans, updateDisplay, etc.)
+    // (same as the previous version I gave you, only shortened here to focus on the keyboard part)
+
+    function log(msg){
+      let logEl=document.getElementById('log');
+      logEl.innerHTML+=msg+'<br>';
+      logEl.scrollTop=logEl.scrollHeight;
+    }
+
+    // === Keyboard controls ===
+    document.addEventListener("keydown", (e) => {
+      if (game.gameOver) return;
+      let dirInput=document.getElementById("direction");
+      let distInput=document.getElementById("distance");
+
+      switch(e.key) {
+        case "ArrowUp": dirInput.value=1; game.lastDirection=1; break;
+        case "ArrowRight": dirInput.value=3; game.lastDirection=3; break;
+        case "ArrowDown": dirInput.value=5; game.lastDirection=5; break;
+        case "ArrowLeft": dirInput.value=7; game.lastDirection=7; break;
+        case "1": dirInput.value=6; game.lastDirection=6; break;
+        case "2": dirInput.value=5; game.lastDirection=5; break;
+        case "3": dirInput.value=4; game.lastDirection=4; break;
+        case "4": dirInput.value=7; game.lastDirection=7; break;
+        case "6": dirInput.value=3; game.lastDirection=3; break;
+        case "7": dirInput.value=0; game.lastDirection=0; break;
+        case "8": dirInput.value=1; game.lastDirection=1; break;
+        case "9": dirInput.value=2; game.lastDirection=2; break;
+        case " ": firePhasers(); break;
+        case "t": case "T": fireTorpedo(); break;
+        case "s": case "S": raiseShields(); break;
+        case "l": case "L": longRangeScan(); break;
+      }
+
+      // auto-move if arrow pressed
+      if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","1","2","3","4","6","7","8","9"].includes(e.key)) {
+        distInput.value = e.shiftKey ? 3 : 1;
+        navigate();
+      }
+    });
+
+    // Initialize
+    initializeGame();
+  </script>
+</body>
+</html>
+
