@@ -382,3 +382,19 @@ e 0 >
 // Function Z - Extra Utility
 :Z
 ;
+
+
+
+////////////
+
+
+% Start mint_octave
+mint_octave()
+
+% When prompted, choose debug mode (n for normal play, y for debugging)
+> n
+
+% Initialize and start the game
+> A G
+
+//////////////////////
