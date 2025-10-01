@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Trek - Galaxy View</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #0a0a0a;
+            color: #33ff33;
+            margin: 0;
+            padding: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .galaxy-view {
+            border: 2px solid #33ff33;
+            background-color: #000000;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        canvas {
+            display: block;
+            background-color: #000000;
+            border: 1px solid #1a331a;
+        }
+        .controls {
+            border: 2px solid #33ff33;
+            background-color: #0a0a0a;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="galaxy-view">
+            <div style="text-align: center; margin-bottom: 10px;">
+                === GALAXY VIEW DISPLAY ===
+            </div>
+            <canvas id="galaxyCanvas" width="860" height="500"></canvas>
+        </div>
+
+        <div class="controls">
+            <strong>CONTROLS:</strong><br>
+            ARROW KEYS: Rotate galaxy view (Up/Down: Tilt X, Left/Right: Tilt Y)<br>
+            S + ARROW KEYS: Pan galaxy disk to aim target at different locations<br>
+            Z + ARROW UP: Zoom in<br>
+            Z + ARROW DOWN: Zoom out<br>
+            <div class="info">
+                <div>
+                    Rotation X: <span id="rotX">0</span>°<br>
+                    Rotation Y: <span id="rotY">0</span>°
+                </div>
+                <div>
+                    Zoom: <span id="zoom">100</span>%<br>
+                    Target Pan: <span id="pan">0, 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Galaxy state
+        let galaxy = {
+            rotationX: 0,
+            rotationY: 0,
+            zoom: 1.0,
+            centerX: canvas.width / 2,
+            centerY: canvas.height / 2,
+            panX: 0,
+            panY: 0
+        };
+
+        // Key states
+        let keys = {};
+
+        // Create galaxy mesh grid (disk with concentric circles and radial lines)
+        function createGalaxyMesh() {
+            const points = [];
+            const lines = [];
+            const radius = 200;
+            const rings = 8;
+            const segments = 32;
+
+            // Create concentric rings
+            for (let ring = 1; ring <= rings; ring++) {
+                const r = (radius / rings) * ring;
+                for (let i = 0; i <= segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r;
+                    const z = 0;
+                    
+                    const pointIndex = points.length;
+                    points.push({x, y, z});
+                    
+                    // Connect to next point in ring
+                    if (i < segments) {
+                        lines.push([pointIndex, pointIndex + 1]);
+                    }
+                }
+            }
+
+            // Create radial lines
+            const pointsPerRing = segments + 1;
+            for (let seg = 0; seg < segments; seg++) {
+                for (let ring = 0; ring < rings - 1; ring++) {
+                    const idx1 = ring * pointsPerRing + seg;
+                    const idx2 = (ring + 1) * pointsPerRing + seg;
+                    lines.push([idx1, idx2]);
+                }
+            }
+
+            return {points, lines};
+        }
+
+        const mesh = createGalaxyMesh();
+
+        // Rotation matrices
+        function rotateX(point, angle) {
+            const rad = angle * Math.PI / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+            return {
+                x: point.x,
+                y: point.y * cos - point.z * sin,
+                z: point.y * sin + point.z * cos
+            };
+        }
+
+        function rotateY(point, angle) {
+            const rad = angle * Math.PI / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+            return {
+                x: point.x * cos + point.z * sin,
+                y: point.y,
+                z: -point.x * sin + point.z * cos
+            };
+        }
+
+        function project(point) {
+            const scale = 300 / (300 + point.z);
+            return {
+                x: point.x * scale * galaxy.zoom + galaxy.centerX + galaxy.panX,
+                y: point.y * scale * galaxy.zoom + galaxy.centerY + galaxy.panY,
+                z: point.z
+            };
+        }
+
+        function drawGalaxy() {
+            // Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Transform all points
+            const transformedPoints = mesh.points.map(point => {
+                let p = {...point};
+                p = rotateX(p, galaxy.rotationX);
+                p = rotateY(p, galaxy.rotationY);
+                return project(p);
+            });
+
+            // Find closest point to targeting reticle
+            let closestDist = Infinity;
+            let closestPoint = null;
+            transformedPoints.forEach(point => {
+                const dx = point.x - galaxy.centerX;
+                const dy = point.y - galaxy.centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestPoint = point;
+                }
+            });
+
+            // Draw grid lines
+            ctx.strokeStyle = '#33ff33';
+            ctx.lineWidth = 1;
+
+            mesh.lines.forEach(([start, end]) => {
+                const p1 = transformedPoints[start];
+                const p2 = transformedPoints[end];
+                
+                // Fade lines based on depth (z-axis)
+                const avgZ = (p1.z + p2.z) / 2;
+                const alpha = Math.max(0.2, Math.min(1, 1 - (avgZ / 400)));
+                ctx.globalAlpha = alpha;
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            });
+
+            ctx.globalAlpha = 1.0;
+
+            // Highlight closest point if within contact range
+            if (closestDist < 30) {
+                ctx.fillStyle = '#33ff33';
+                ctx.beginPath();
+                ctx.arc(closestPoint.x, closestPoint.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw contact indicator
+                ctx.strokeStyle = '#ff3333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(galaxy.centerX, galaxy.centerY, 25, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Draw targeting reticle at center
+            ctx.strokeStyle = '#33ff33';
+            ctx.lineWidth = 2;
+            
+            // Crosshair
+            ctx.beginPath();
+            ctx.moveTo(galaxy.centerX - 15, galaxy.centerY);
+            ctx.lineTo(galaxy.centerX - 5, galaxy.centerY);
+            ctx.moveTo(galaxy.centerX + 5, galaxy.centerY);
+            ctx.lineTo(galaxy.centerX + 15, galaxy.centerY);
+            ctx.moveTo(galaxy.centerX, galaxy.centerY - 15);
+            ctx.lineTo(galaxy.centerX, galaxy.centerY - 5);
+            ctx.moveTo(galaxy.centerX, galaxy.centerY + 5);
+            ctx.lineTo(galaxy.centerX, galaxy.centerY + 15);
+            ctx.stroke();
+            
+            // Targeting circle
+            ctx.beginPath();
+            ctx.arc(galaxy.centerX, galaxy.centerY, 20, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw border scan lines (retro CRT effect)
+            ctx.strokeStyle = '#1a331a';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.height; i += 4) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('rotX').textContent = Math.round(galaxy.rotationX);
+            document.getElementById('rotY').textContent = Math.round(galaxy.rotationY);
+            document.getElementById('zoom').textContent = Math.round(galaxy.zoom * 100);
+            document.getElementById('pan').textContent = `${Math.round(galaxy.panX)}, ${Math.round(galaxy.panY)}`;
+        }
+
+        function handleInput() {
+            const rotSpeed = 2;
+            const zoomSpeed = 0.04;
+            const panSpeed = 5;
+
+            // Z + Arrow keys for zoom
+            if (keys['z'] || keys['Z']) {
+                if (keys['ArrowUp']) {
+                    galaxy.zoom = Math.min(3.0, galaxy.zoom + zoomSpeed);
+                }
+                if (keys['ArrowDown']) {
+                    galaxy.zoom = Math.max(0.3, galaxy.zoom - zoomSpeed);
+                }
+            }
+            // S + Arrow keys for panning (moving the disk to aim at different spots)
+            else if (keys['s'] || keys['S']) {
+                if (keys['ArrowUp']) {
+                    galaxy.panY += panSpeed;
+                }
+                if (keys['ArrowDown']) {
+                    galaxy.panY -= panSpeed;
+                }
+                if (keys['ArrowLeft']) {
+                    galaxy.panX += panSpeed;
+                }
+                if (keys['ArrowRight']) {
+                    galaxy.panX -= panSpeed;
+                }
+                
+                // Limit pan range to keep galaxy accessible
+                const maxPan = 250;
+                galaxy.panX = Math.max(-maxPan, Math.min(maxPan, galaxy.panX));
+                galaxy.panY = Math.max(-maxPan, Math.min(maxPan, galaxy.panY));
+            } 
+            // Arrow keys alone for rotation
+            else {
+                if (keys['ArrowUp']) {
+                    galaxy.rotationX -= rotSpeed;
+                }
+                if (keys['ArrowDown']) {
+                    galaxy.rotationX += rotSpeed;
+                }
+                if (keys['ArrowLeft']) {
+                    galaxy.rotationY -= rotSpeed;
+                }
+                if (keys['ArrowRight']) {
+                    galaxy.rotationY += rotSpeed;
+                }
+            }
+
+            // Keep rotation in reasonable range
+            galaxy.rotationX = galaxy.rotationX % 360;
+            galaxy.rotationY = galaxy.rotationY % 360;
+        }
+
+        function gameLoop() {
+            handleInput();
+            drawGalaxy();
+            updateDisplay();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            // Prevent default for arrow keys to avoid scrolling
+            if (e.key.startsWith('Arrow')) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Start the animation loop
+        gameLoop();
+    </script>
+</body>
+</html>
