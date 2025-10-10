@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Wireframe Galaxy — Course Plot & ETA</title>
+<title>Wireframe Galaxy — Target Cleoms + Click-to-Fly</title>
 <style>
   html,body{margin:0;height:100%;background:#000;color:#9f9;
   font-family:system-ui,monospace;overflow:hidden}
@@ -18,7 +18,7 @@
 </style>
 </head>
 <body>
-<div id="titlebar">GALAXY — ☣ Cleoms, ☉ Bases, ^A^ Ship — Double-click Cleom to plot course</div>
+<div id="titlebar">GALAXY — ☣ Cleoms, ☉ Bases, ^A^ Ship — Double-click to plot, click anywhere to set waypoint, Space to fly</div>
 <canvas id="c"></canvas>
 <div id="hud"></div>
 
@@ -27,68 +27,61 @@
 const canvas=document.getElementById("c");
 const ctx=canvas.getContext("2d",{alpha:false});
 const hud=document.getElementById("hud");
-
 function resize(){
   const dpr=Math.max(1,Math.min(2.5,window.devicePixelRatio||1));
-  canvas.width=innerWidth*dpr;
-  canvas.height=innerHeight*dpr;
+  canvas.width=innerWidth*dpr;canvas.height=innerHeight*dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 addEventListener("resize",resize);resize();
 
-// --- galaxy stars ---
+// === Galaxy objects ===
 const STAR_COUNT=2000,stars=[];
 for(let i=0;i<STAR_COUNT;i++){
-  const u=Math.random(),r=Math.pow(u,.55),
-  arm=i%2,base=(arm?0:Math.PI)+r*6,
-  t=base+(Math.random()-.5)*.35,
-  x=r*Math.cos(t),y=r*Math.sin(t),
-  z=(Math.random()-.5)*.06*(1-r*.7),
+  const u=Math.random(),r=Math.pow(u,.55),arm=i%2,
+  base=(arm?0:Math.PI)+r*6,t=base+(Math.random()-.5)*.35,
+  x=r*Math.cos(t),y=r*Math.sin(t),z=(Math.random()-.5)*.06*(1-r*.7),
   b=.6+.4*(1-r);
-  stars.push({x,y,z,b});
+  stars.push({x,y,z,b,hazard:false});
 }
-
-// --- Cleoms ---
 const CLEOM_COUNT=40,cleoms=[];
 for(let i=0;i<CLEOM_COUNT;i++){
   const r=Math.random()*.9+.1,theta=Math.random()*Math.PI*2;
   cleoms.push({x:r*Math.cos(theta),y:r*Math.sin(theta),z:(Math.random()-.5)*.05});
 }
-
-// --- Starbases ---
 const BASE_COUNT=3,bases=[];
 for(let i=0;i<BASE_COUNT;i++){
   const r=Math.random()*.8+.15,t=Math.random()*Math.PI*2;
   bases.push({x:r*Math.cos(t),y:r*Math.sin(t),z:(Math.random()-.5)*.02});
 }
 
-// --- player ship ---
-const ship={x:0,y:0,z:0,fuel:100};
+// === Player ship ===
+const ship={x:0,y:0,z:0};
+let selected=null,course=null,lastClick=0,flightActive=false,courseWarning=false;
 
-// --- camera ---
+// === Camera ===
 let yaw=0,pitch=0,zoom=1,targetZoom=1,panX=0,panY=0,targetPanX=0,targetPanY=0;
 const KEY={},clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 addEventListener("keydown",e=>{KEY[e.key]=true});
 addEventListener("keyup",e=>{KEY[e.key]=false});
 
-// --- zoom centered ---
+// === Zoom ===
 canvas.addEventListener("wheel",e=>{
   e.preventDefault();
   const rect=canvas.getBoundingClientRect(),cx=rect.width/2,cy=rect.height/2;
   const mx=e.clientX-rect.left-cx-panX,my=e.clientY-rect.top-cy-panY;
   const factor=Math.exp(-e.deltaY*.0015);
-  const newZoom=clamp(targetZoom*factor,.2,8);
-  const k=newZoom/targetZoom;
+  const newZoom=clamp(targetZoom*factor,.2,8),k=newZoom/targetZoom;
   targetPanX-=mx*(k-1);targetPanY-=my*(k-1);targetZoom=newZoom;
 },{passive:false});
 
-// --- click selection / double-click course plotting ---
-let selected=null,course=null,lastClick=0;
+// === Click/Double-click handler ===
 canvas.addEventListener("click",e=>{
   const now=performance.now(),rect=canvas.getBoundingClientRect();
   const cx=rect.width/2,cy=rect.height/2,scale=Math.min(cx,cy)*.9*zoom;
   const mx=e.clientX-rect.left-cx-panX,my=e.clientY-rect.top-cy-panY;
   const cyaw=Math.cos(yaw),syaw=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+
+  // 1. check Cleoms first
   let hit=null,minDist=20;
   for(const c of cleoms){
     const rx=c.x*cyaw-c.z*syaw,rz=c.x*syaw+c.z*cyaw,ry=c.y*cp-rz*sp;
@@ -96,11 +89,31 @@ canvas.addEventListener("click",e=>{
     const dist=Math.sqrt(dx*dx+dy*dy);
     if(dist<minDist){hit=c;minDist=dist;}
   }
-  if(now-lastClick<300 && selected===hit && hit){course={target:hit,time:now};}
-  else selected=hit;
+
+  if(hit){ // clicked a Cleom
+    if(now-lastClick<300 && selected===hit){ // double-click → plot course to Cleom
+      course={target:hit,start:{...ship},eta:distance3D(ship,hit)/0.25,startTime:now};
+      flightActive=false;detectHazards(); 
+    } else selected=hit;
+  } else {
+    // clicked empty space → plot waypoint
+    const wx=(mx/scale)*Math.cos(yaw)+(my/scale)*Math.sin(yaw);
+    const wy=(my/scale)*Math.cos(yaw)-(mx/scale)*Math.sin(yaw);
+    const target={x:ship.x+wx,y:ship.y+wy,z:0};
+    course={target,start:{...ship},eta:distance3D(ship,target)/0.25,startTime:now};
+    selected=null;flightActive=false;detectHazards();
+  }
   lastClick=now;
 });
 
+// === Spacebar starts flight ===
+addEventListener("keydown",e=>{
+  if(e.code==="Space"&&course&&!flightActive){
+    course.startTime=performance.now();flightActive=true;
+  }
+});
+
+// === Math helpers ===
 function rotatePoint(p,yaw,pitch){
   const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
   const x1=p.x*cy-p.z*sy,z1=p.x*sy+p.z*cy;
@@ -109,16 +122,31 @@ function rotatePoint(p,yaw,pitch){
 }
 function distance3D(a,b){const dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z;
   return Math.sqrt(dx*dx+dy*dy+dz*dz);}
+function detectHazards(){
+  for(const s of stars)s.hazard=false;courseWarning=false;
+  if(!course)return;
+  const A=ship,B=course.target;
+  const abx=B.x-A.x,aby=B.y-A.y,abz=B.z-A.z,abLen=Math.sqrt(abx*abx+aby*aby+abz*abz);
+  const thresh=0.015;
+  for(const s of stars){
+    const apx=s.x-A.x,apy=s.y-A.y,apz=s.z-A.z;
+    const t=(apx*abx+apy*aby+apz*abz)/(abLen*abLen);
+    if(t>=0&&t<=1){
+      const closest={x:A.x+abx*t,y:A.y+aby*t,z:A.z+abz*t};
+      if(distance3D(s,closest)<thresh){s.hazard=true;courseWarning=true;}
+    }
+  }
+}
 
-// --- drawing ---
+// === Drawing ===
 function drawStars(scale,cx,cy){
   ctx.save();ctx.translate(cx+panX,cy+panY);
   for(const s of stars){
-    const r=rotatePoint(s,yaw,pitch);
-    const sx=r.x*scale,sy=r.y*scale,size=s.b*2*zoom;
-    ctx.globalAlpha=.35+s.b*.65;ctx.fillStyle="#9f9";
+    const r=rotatePoint(s,yaw,pitch),sx=r.x*scale,sy=r.y*scale,size=s.b*2*zoom;
+    ctx.globalAlpha=.4;ctx.fillStyle=s.hazard?"#f00":"#9f9";
     ctx.fillRect(sx-size/2,sy-size/2,size,size);
-  }ctx.globalAlpha=1;ctx.restore();
+  }
+  ctx.globalAlpha=1;ctx.restore();
 }
 function drawBases(scale,cx,cy){
   ctx.save();ctx.translate(cx+panX,cy+panY);
@@ -129,7 +157,7 @@ function drawBases(scale,cx,cy){
   }ctx.shadowBlur=0;ctx.restore();
 }
 function drawCleoms(scale,cx,cy){
-  if(zoom<2.0)return;ctx.save();ctx.translate(cx+panX,cy+panY);
+  if(zoom<2)return;ctx.save();ctx.translate(cx+panX,cy+panY);
   for(const c of cleoms){
     const r=rotatePoint(c,yaw,pitch),sx=r.x*scale,sy=r.y*scale,size=12*Math.sqrt(zoom);
     ctx.font=`${size}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
@@ -137,13 +165,11 @@ function drawCleoms(scale,cx,cy){
     ctx.fillText("☣",sx,sy);
     if(selected===c){ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.strokeStyle="#0f0";
       const box=size*.9;ctx.strokeRect(sx-box,sy-box,box*2,box*2);}
-  }
-  ctx.shadowBlur=0;ctx.restore();
+  }ctx.shadowBlur=0;ctx.restore();
 }
 function drawShip(scale,cx,cy){
   ctx.save();ctx.translate(cx+panX,cy+panY);
-  const r=rotatePoint(ship,yaw,pitch),sx=r.x*scale,sy=r.y*scale;
-  const size=16*Math.sqrt(zoom);
+  const r=rotatePoint(ship,yaw,pitch),sx=r.x*scale,sy=r.y*scale,size=16*Math.sqrt(zoom);
   ctx.font=`${size}px monospace`;ctx.textAlign="center";ctx.textBaseline="middle";
   ctx.fillStyle="#0f0";ctx.shadowColor="#0f0";ctx.shadowBlur=8;ctx.fillText("^A^",sx,sy);
   ctx.shadowBlur=0;ctx.restore();
@@ -151,14 +177,13 @@ function drawShip(scale,cx,cy){
 function drawCourse(scale,cx,cy){
   if(!course)return;
   ctx.save();ctx.translate(cx+panX,cy+panY);
-  const sR=rotatePoint(ship,yaw,pitch),tR=rotatePoint(course.target,yaw,pitch);
+  const sR=rotatePoint(course.start,yaw,pitch),tR=rotatePoint(course.target,yaw,pitch);
   const sx=sR.x*scale,sy=sR.y*scale,tx=tR.x*scale,ty=tR.y*scale;
-  ctx.strokeStyle="#0f0";ctx.lineWidth=1;ctx.beginPath();
-  ctx.moveTo(sx,sy);ctx.lineTo(tx,ty);ctx.stroke();
-  ctx.restore();
+  ctx.strokeStyle=flightActive?"#ff0":"#0f0";ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(tx,ty);ctx.stroke();ctx.restore();
 }
 
-// --- controls ---
+// === Update ===
 function update(dt){
   const rs=1.2,ts=0.9;
   if(KEY.ArrowLeft)yaw-=rs*dt;
@@ -175,17 +200,26 @@ function update(dt){
   zoom+=(targetZoom-zoom)*(1-Math.pow(.001,dt));
   panX+=(targetPanX-panX)*(1-Math.pow(.0015,dt));
   panY+=(targetPanY-panY)*(1-Math.pow(.0015,dt));
+
+  // Flight motion
+  if(flightActive && course){
+    const elapsed=(performance.now()-course.startTime)/1000;
+    const t=clamp(elapsed/course.eta,0,1);
+    ship.x=course.start.x+(course.target.x-course.start.x)*t;
+    ship.y=course.start.y+(course.target.y-course.start.y)*t;
+    ship.z=course.start.z+(course.target.z-course.start.z)*t;
+    if(t>=1){flightActive=false;course=null;}
+  }
 }
 
-// --- main loop ---
+// === Main loop ===
 let last=performance.now();
 function loop(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);
   ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);
-  const cx=canvas.width/(2*(window.devicePixelRatio||1));
-  const cy=canvas.height/(2*(window.devicePixelRatio||1));
-  const scale=Math.min(cx,cy)*.9*zoom;
-
+  const cx=canvas.width/(2*(window.devicePixelRatio||1)),
+        cy=canvas.height/(2*(window.devicePixelRatio||1)),
+        scale=Math.min(cx,cy)*.9*zoom;
   drawStars(scale,cx,cy);
   drawBases(scale,cx,cy);
   drawCleoms(scale,cx,cy);
@@ -198,10 +232,10 @@ function loop(now){
     info+=`<br>Target Distance: ${d.toFixed(3)} units`;
   }
   if(course){
-    const d=distance3D(ship,course.target);
-    const speed=0.25; // same as ship nominal speed
-    const eta=d/speed;
-    info+=`<br><span style="color:#0f0">Plotted Course</span> — ETA: ${eta.toFixed(1)} sec`;
+    const d=distance3D(course.start,course.target),speed=0.25,eta=d/speed;
+    info+=`<br><span style="color:#0f0">Plotted Course</span> — ETA ${eta.toFixed(1)} s`;
+    if(courseWarning)info+=`<br><span style="color:#f00">WARNING: Stellar intersection!</span>`;
+    if(flightActive)info+=`<br><span style="color:#ff0">IN FLIGHT</span>`;
   }
   hud.innerHTML=`yaw:${yaw.toFixed(2)}<br>pitch:${pitch.toFixed(2)}<br>zoom:${zoom.toFixed(2)}${info}`;
   requestAnimationFrame(loop);
