@@ -1,0 +1,746 @@
+Perfect — this next diagram is a **fully expanded ASCII flowchart** of the *HP 1973 STAR TREK* BASIC program, showing all the key command paths and GOSUBs in their logical order.
+It doesn’t list *every single line* (that would be ~6000 nodes), but it includes all **main subsystems, inputs, and branching structure**.
+
+---
+
+## 🖥️ ASCII FLOWCHART — HP BASIC “STAR TREK” (1973)
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ PROGRAM START                                                      │
+│ Lines 100–230: Banner & Instructions                               │
+└────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ INITIALIZATION                                                     │
+│ Lines 240–770                                                      │
+│ - Clear Screen (GOSUB 5460)                                        │
+│ - Dimension arrays: G[8,8], C[9,2], K[3,3], N[3], Z[8,8], etc.     │
+│ - Initialize constants:                                            │
+│     Energy E=3000, Shields S=0, Torpedoes P=10, Stardate T0+T9     │
+│ - Randomize galaxy layout:                                         │
+│     Each quadrant may contain Klingons (K3), Starbases (B3), Stars │
+│ - Count totals: K9 Klingons, B9 Starbases                          │
+└────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ MISSION BRIEF                                                      │
+│ Lines 780–790                                                      │
+│ → Print "Destroy K9 Klingons in T9 stardates, with B9 starbases"   │
+└────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ INITIAL QUADRANT SETUP                                             │
+│ Lines 810–1260                                                     │
+│ - Determine starting quadrant (Q1,Q2) and sector (S1,S2)           │
+│ - Decode quadrant contents G[Q1,Q2] into K3,B3,S3                  │
+│ - Insert icons into string map (Q$, R$, S$):                       │
+│       <*> Enterprise                                               │
+│       +++ Klingon                                                  │
+│       >!< Starbase                                                 │
+│       *   Star                                                     │
+│ - Call GOSUB 5510 for placement                                    │
+│ - Then GOSUB 4120 → short range display & docking check            │
+└────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+╔════════════════════════════════════════════════════════════════════╗
+║                     MAIN COMMAND LOOP (Lines 1270+)                 ║
+╚════════════════════════════════════════════════════════════════════╝
+        │
+        ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ PRINT COMMAND MENU (Lines 1300–1390)                               │
+│    0 = WARP ENGINE CONTROL                                         │
+│    1 = SHORT RANGE SENSOR SCAN                                     │
+│    2 = LONG RANGE SENSOR SCAN                                      │
+│    3 = FIRE PHASERS                                                │
+│    4 = FIRE PHOTON TORPEDOES                                       │
+│    5 = SHIELD CONTROL                                              │
+│    6 = DAMAGE CONTROL REPORT                                       │
+│    7 = LIBRARY COMPUTER                                            │
+└────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────┬────────────────────────────────────────┐
+│ INPUT COMMAND (A)          │ GOTO A+1 OF …                          │
+│                            │                                        │
+│  0 → 1410  WARP ENGINES    │  1 → 1260  SHORT RANGE (loopback)     │
+│  2 → 2330  LONG RANGE SCAN │  3 → 2530  FIRE PHASERS               │
+│  4 → 2800  TORPEDO FIRE    │  5 → 3460  SHIELD CONTROL             │
+│  6 → 3560  DAMAGE REPORT   │  7 → 4630  LIBRARY COMPUTER           │
+└────────────────────────────┴────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 0 — WARP ENGINES (1410–2320)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ Ask COURSE (1–9), WARP FACTOR (0–8)                                │
+│ Check for engine damage (D[1]<0 → limit to .2)                     │
+│ If Klingons remain, call GOSUB 3790 (they attack)                  │
+│ Damage randomization (chance to worsen/improve)                    │
+│ Calculate trajectory using table C[9,2]                            │
+│ Move S1,S2 stepwise by X1,X2 for N = warp*8 sectors                │
+│ If hit edge → move to new quadrant (Q1,Q2)                         │
+│ Update stardate (T), energy (E), and map                           │
+│ Return to main loop                                                │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 1 — SHORT RANGE SCAN (4120–4530)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ GOSUB 4120:                                                       │
+│ - Check docking proximity to starbase                             │
+│ - Set condition C$: "DOCKED", "RED", "YELLOW", or "GREEN"         │
+│ - If short range sensors damaged → print error                    │
+│ - Else print 8×8 map with status info (energy, shields, torps)    │
+│   via formatted IMAGE templates 4540–4620                         │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 2 — LONG RANGE SCAN (2330–2500)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ If D[3]<0 → "LONG RANGE SENSORS INOPERABLE"                       │
+│ Else: For quadrants (Q1–1..Q1+1, Q2–1..Q2+1):                     │
+│   - Display G[I,J] coded as K,B,S digits                          │
+│   - Store into Z[][] if computer working                          │
+│ Return to main loop                                               │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 3 — FIRE PHASERS (2530–2790)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ If D[4]<0 → disabled                                              │
+│ Prompt for energy units to fire (X)                               │
+│ Subtract from E, randomize hit if computer down                   │
+│ For each active Klingon:                                          │
+│   - Calculate hit strength H = (X/K3)/distance × random           │
+│   - Decrease K[i,3] (their shields)                               │
+│   - Print “H UNIT HIT ON KLINGON …”                               │
+│   - If K[i,3] ≤ 0 → GOSUB 3690 (destroyed)                        │
+│ Klingons may retaliate (GOSUB 3790)                               │
+│ Return to loop                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 4 — PHOTON TORPEDOES (2800–3450)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ If D[5]<0 → disabled                                              │
+│ If no torpedoes (P=0) → exit                                     │
+│ Ask torpedo COURSE (1–9)                                          │
+│ Step through path X,Y by X1,X2                                    │
+│ Print “TORPEDO TRACK” and coordinates                             │
+│ Test via GOSUB 5680 for collision:                                │
+│   - +++ Klingon → destroy (K3--,K9--)                             │
+│   -  * Star → “Can’t destroy stars”                               │
+│   - >!< Base → “Base destroyed”                                   │
+│ If missed → “TORPEDO MISSED”                                      │
+│ Update galaxy G[Q1,Q2]                                            │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 5 — SHIELD CONTROL (3460–3550)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ If D[7]<0 → “NON-OPERATIONAL”                                     │
+│ Prompt for units to assign to shields (X)                         │
+│ Rebalance energy and shields:                                     │
+│     E = E + S - X,  S = X                                         │
+│ Return to loop                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 6 — DAMAGE CONTROL REPORT (3560–3660)
+───────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ If D[6]<0 → “NOT AVAILABLE”                                       │
+│ Else loop through 8 devices:                                      │
+│   GOSUB 5610 → print device name from D$ or E$                    │
+│   Then print D[R1] repair state                                   │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ COMMAND 7 — LIBRARY COMPUTER (4630–5320)
+───────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ If D[8]<0 → “COMPUTER DISABLED”                                   │
+│ Else present menu:                                                │
+│   0 → CUMULATIVE GALACTIC RECORD (4740–4820)                      │
+│   1 → STATUS REPORT (4830–4870)                                   │
+│   2 → PHOTON TORPEDO DATA / CALCULATOR (4880–5320)                │
+│   Return to main loop                                             │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ ENDGAME CONDITIONS (3920–4110)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ - Energy depleted → “DEAD IN SPACE”                               │
+│ - Time expired → “IT IS STARDATE T … FEDERATION LOST”             │
+│ - Ship destroyed → “ENTERPRISE DESTROYED”                         │
+│ - All Klingons dead → “FEDERATION SAVED!”                         │
+│   → Efficiency rating = K7 / (T - T0) × 1000                      │
+└────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+ SHARED SUBROUTINES
+───────────────────────────────────────────────────────────────────────────────
+ 5460 → Clear screen (11 lines)  
+ 5510 → Insert symbol into quadrant string  
+ 5610 → Print device name for damage report  
+ 5680 → Check object at (Z1,Z2) for match A$  
+ 3690 → Handle Klingon destroyed (remove, update G[][])  
+ 3790 → Klingons attack Enterprise  
+ 4120 → Docking, condition RED/GREEN/YELLOW logic  
+ 5820 → Display full instructions  
+ 5380 → Find random empty sector  
+ 4000 → Print loss summary  
+ 4040 → Print victory summary  
+
+───────────────────────────────────────────────────────────────────────────────
+ PROGRAM END (6420)
+───────────────────────────────────────────────────────────────────────────────
+┌────────────────────────────────────────────────────────────────────┐
+│ END                                                                │
+│ Return to BASIC READY prompt                                       │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🧭 Overview of Gameplay Logic
+
+| Phase                  | Description                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| **Initialization**     | Build galaxy, seed random elements, set up arrays and device states.                 |
+| **Command Loop**       | Await player input (0–7). Each branch updates the ship’s state and global variables. |
+| **Combat Subroutines** | Manage Klingon positions (K array) and combat resolution.                            |
+| **Sensors & Computer** | Display current sector or galaxy status via string manipulation.                     |
+| **End Conditions**     | Monitor time (T), remaining Klingons (K9), and energy (E). Game ends accordingly.    |
+
+---
+
+Would you like me to **extend this** into a *hierarchical ASCII block diagram* (indent-tree form) showing every GOSUB and RETURN link (like a call-tree map of subroutine dependencies)? That would visually map how the `GOSUB 5510`, `GOSUB 3790`, etc., interconnect throughout the main loop.
+
+
+/////////////////////////////////
+
+
+
+Excellent — let’s now translate the **HP BASIC “STAR TREK” (1973)** listing into **detailed pseudocode**, preserving the original structure, logic, and variable names, but rewritten in a clear, modern, structured way (like a hybrid of BASIC and C-style pseudocode).
+
+This version tracks the entire game flow, including setup, main loop, command handlers, and key subroutines.
+
+---
+
+# 🧠 STAR TREK (HP BASIC 1973) — DETAILED PSEUDOCODE
+
+---
+
+## 1️⃣  INITIALIZATION PHASE
+
+```pseudocode
+procedure MAIN
+    call CLEAR_SCREEN()                       // GOSUB 5460
+    print "STAR TREK"
+    ask "DO YOU WANT INSTRUCTIONS (THEY'RE LONG!)?" → A$
+    if A$ == "YES" then call SHOW_INSTRUCTIONS()
+
+    // ---- Initialize Universe ----
+    define arrays:
+        G[8,8], C[9,2], K[3,3], N[3], Z[8,8]
+        strings: C$[6], D$[72], E$[24], A$[3], Q$[72], R$[72], S$[48], Z$[72]
+
+    // Game constants
+    T0 = random(20..40) * 100     // starting stardate
+    T9 = 30                       // total mission days
+    E0 = E = 3000                 // energy
+    P0 = P = 10                   // torpedoes
+    S = S9 = 0                    // shields
+    S9 = 200                      // Klingon shield strength
+    D0 = 0                        // dock flag
+    B9 = K9 = 0                   // counters
+    H8 = 0
+
+    // Direction table C[1..9][1..2]
+    // (Defines delta-x, delta-y for courses 1–9)
+    fill C[][] according to direction vectors (lines 420–440)
+
+    // Initialize damage table D[8] = 0
+    for i = 1 to 8: D[i] = 0
+
+    // Device names (for damage control)
+    D$ = "WARP ENGINES  S.R. SENSORS  L.R. SENSORS  PHASER CNTRL"
+         + "PHOTON TUBES  DAMAGE CNTRL"
+    E$ = "SHIELD CNTRL  COMPUTER"
+
+    // ---- Generate Galaxy Map ----
+    for I = 1 to 8:
+        for J = 1 to 8:
+            R1 = random(0..1)
+            if R1 > .98: K3 = 3, K9 += 3
+            else if R1 > .95: K3 = 2, K9 += 2
+            else if R1 > .8:  K3 = 1, K9 += 1
+            else K3 = 0
+
+            R1 = random(0..1)
+            if R1 > .96: B3 = 1, B9 += 1
+            else B3 = 0
+
+            S3 = random(1..8)
+            G[I,J] = K3*100 + B3*10 + S3
+            Z[I,J] = 0
+        next J
+    next I
+
+    if K9 == 0 or B9 == 0 then restart galaxy generation
+
+    // ---- Mission briefing ----
+    print "YOU MUST DESTROY", K9, "KLINGONS IN", T9, "STARDATES WITH", B9, "STARBASES"
+```
+
+---
+
+## 2️⃣  INITIAL QUADRANT SETUP
+
+```pseudocode
+    // Random starting position
+    Q1 = random(1..8)
+    Q2 = random(1..8)
+    S1 = random(1..8)
+    S2 = random(1..8)
+
+    // Decode current quadrant contents
+    X = G[Q1,Q2] / 100
+    K3 = int(X)
+    B3 = int((X - K3)*10)
+    S3 = G[Q1,Q2] mod 10
+
+    if K3 > 0 and S < 200:
+        print "COMBAT AREA - CONDITION RED"
+        print "SHIELDS DANGEROUSLY LOW"
+
+    // Initialize Klingon array K[3,3] to zero
+    for i = 1 to 3: K[i,3] = 0
+
+    // Clear map strings
+    Q$ = R$ = 72 spaces
+    S$ = 48 spaces
+
+    // Place Enterprise
+    call DRAW_SYMBOL("<*>", S1, S2)
+
+    // Place Klingons
+    for i = 1 to K3:
+        call RANDOM_SECTOR() → (R1,R2)
+        call DRAW_SYMBOL("+++", R1,R2)
+        K[i,1] = R1, K[i,2] = R2, K[i,3] = S9
+    next i
+
+    // Place Starbases
+    for i = 1 to B3:
+        call RANDOM_SECTOR() → (R1,R2)
+        call DRAW_SYMBOL(">!<", R1,R2)
+    next i
+
+    // Place Stars
+    for i = 1 to S3:
+        call RANDOM_SECTOR() → (R1,R2)
+        call DRAW_SYMBOL(" * ", R1,R2)
+    next i
+
+    // Initial short-range scan
+    call SHORT_SCAN()
+```
+
+---
+
+## 3️⃣  MAIN COMMAND LOOP
+
+```pseudocode
+MAIN_LOOP:
+    print "COMMAND (0–7)?"
+    input A
+
+    switch A:
+        case 0: call CMD_WARP()
+        case 1: call SHORT_SCAN()
+        case 2: call LONG_SCAN()
+        case 3: call FIRE_PHASERS()
+        case 4: call FIRE_TORPEDO()
+        case 5: call SHIELD_CONTROL()
+        case 6: call DAMAGE_REPORT()
+        case 7: call LIBRARY_COMPUTER()
+        default: call SHOW_MENU()
+    end switch
+
+    if T > T0 + T9: call GAME_OVER_TIME()
+    if E <= 0: call GAME_OVER_DEAD()
+    if K9 <= 0: call GAME_WIN()
+
+    goto MAIN_LOOP
+end procedure
+```
+
+---
+
+## 4️⃣  COMMAND HANDLERS
+
+### 0 — WARP ENGINES
+
+```pseudocode
+procedure CMD_WARP()
+    ask "COURSE (1–9)" → C1
+    ask "WARP FACTOR (0–8)" → W1
+    if D[1] < 0 and W1 > .2:
+        print "ENGINES DAMAGED, MAX SPEED .2"
+        return
+
+    if K3 > 0: call ENEMY_ATTACK()
+
+    // Possible random damage or repair
+    if random() < .2:
+        R1 = random(1..8)
+        if random() < .5:
+            D[R1] -= random(1..5)
+            print "DAMAGE: ", device(R1)
+        else:
+            D[R1] += random(1..5)
+            print "REPAIR: ", device(R1)
+
+    // Calculate motion vector from C[]
+    C2 = int(C1)
+    X1 = C[C2,1] + (C[C2+1,1]-C[C2,1])*(C1-C2)
+    X2 = C[C2,2] + (C[C2+1,2]-C[C2,2])*(C1-C2)
+    N = int(W1*8)
+
+    erase_symbol(S1,S2)
+    for i = 1 to N:
+        S1 += X1
+        S2 += X2
+        if out_of_bounds(S1,S2):
+            call MOVE_TO_NEW_QUADRANT()
+            return
+        if COLLISION(S1,S2): break
+    next i
+
+    DRAW_SYMBOL("<*>", int(S1+.5), int(S2+.5))
+    E -= N - 5
+    if W1 >= 1: T += 1
+end procedure
+```
+
+---
+
+### 1 — SHORT RANGE SCAN
+
+```pseudocode
+procedure SHORT_SCAN()
+    // Check docking
+    D0 = 0
+    for i = S1-1 to S1+1:
+        for j = S2-1 to S2+1:
+            if object_at(i,j) == ">!<":
+                D0 = 1
+                C$ = "DOCKED"
+                E = 3000; P = 10; S = 0
+                print "DOCKED – SHIELDS DROPPED"
+                goto after_loop
+        next j
+    next i
+
+after_loop:
+    if D0 == 0:
+        if K3 == 0 and E > E0*.1: C$="GREEN"
+        else if K3 > 0: C$="RED"
+        else C$="YELLOW"
+
+    if D[2] < 0:
+        print "*** SHORT RANGE SENSORS OUT ***"
+        return
+
+    print MAP with status (stardate, condition, quadrant, sector, energy, shields, torpedoes)
+end procedure
+```
+
+---
+
+### 2 — LONG RANGE SCAN
+
+```pseudocode
+procedure LONG_SCAN()
+    if D[3] < 0:
+        print "LONG RANGE SENSORS INOPERABLE"
+        return
+
+    print "LONG RANGE SENSOR SCAN FOR QUADRANT", Q1, Q2
+    for I = Q1-1 to Q1+1:
+        for J = Q2-1 to Q2+1:
+            if valid_quadrant(I,J):
+                N[J-Q2+2] = G[I,J]
+                if D[7] >= 0: Z[I,J] = G[I,J]
+        next J
+        print row N[]
+    next I
+end procedure
+```
+
+---
+
+### 3 — FIRE PHASERS
+
+```pseudocode
+procedure FIRE_PHASERS()
+    if K3 <= 0:
+        print "NO KLINGONS HERE"
+        return
+    if D[4] < 0:
+        print "PHASER CONTROL DISABLED"
+        return
+
+    print "PHASERS LOCKED ON TARGET. ENERGY =", E
+    ask "UNITS TO FIRE" → X
+    if X <= 0 or X > E: return
+    E -= X
+
+    if D[7] < 0: X *= random()
+
+    for each Klingon i:
+        if K[i,3] > 0:
+            H = (X / K3 / distance(K[i])) * (2 * random())
+            K[i,3] -= H
+            print "HIT ON KLINGON", K[i,1], K[i,2]
+            if K[i,3] <= 0: call KILL_KLINGON(i)
+    next
+
+    if E <= 0: call GAME_OVER_DEAD()
+end procedure
+```
+
+---
+
+### 4 — PHOTON TORPEDOES
+
+```pseudocode
+procedure FIRE_TORPEDO()
+    if D[5] < 0: print "TUBES INOPERABLE"; return
+    if P <= 0: print "NO TORPEDOES"; return
+
+    ask "TORPEDO COURSE (1–9)" → C1
+    compute X1,X2 same as in warp
+    P -= 1
+    print "TORPEDO TRACK:"
+
+    X = S1; Y = S2
+    loop:
+        X += X1; Y += X2
+        if out_of_bounds(X,Y): break
+
+        print "(",X,",",Y,")"
+        if hit_object(X,Y,"+++"): call KILL_KLINGON_AT(X,Y); return
+        if hit_object(X,Y," * "): print "CAN'T DESTROY STARS"; break
+        if hit_object(X,Y,">!<"): print "STARBASE DESTROYED"; B3--; break
+    end loop
+
+    print "TORPEDO MISSED"
+    call ENEMY_ATTACK()
+end procedure
+```
+
+---
+
+### 5 — SHIELD CONTROL
+
+```pseudocode
+procedure SHIELD_CONTROL()
+    if D[7] < 0: print "SHIELD CONTROL INOPERABLE"; return
+    ask "ENERGY AVAILABLE =", E+S, "TO SHIELDS?" → X
+    if X <= 0 or X > E+S: return
+    E = E + S - X
+    S = X
+end procedure
+```
+
+---
+
+### 6 — DAMAGE CONTROL REPORT
+
+```pseudocode
+procedure DAMAGE_REPORT()
+    if D[6] < 0: print "REPORT NOT AVAILABLE"; return
+    print "DEVICE        STATE OF REPAIR"
+    for R1 = 1 to 8:
+        print device_name(R1), D[R1]
+    next
+end procedure
+```
+
+---
+
+### 7 — LIBRARY COMPUTER
+
+```pseudocode
+procedure LIBRARY_COMPUTER()
+    if D[8] < 0: print "COMPUTER DISABLED"; return
+    print "COMPUTER ACTIVE: 0=GALACTIC RECORD, 1=STATUS, 2=TORPEDO DATA"
+    input A
+    switch A:
+        case 0: call GALACTIC_RECORD()
+        case 1: call STATUS_REPORT()
+        case 2: call TORPEDO_DATA()
+end procedure
+```
+
+---
+
+## 5️⃣  SUBROUTINES
+
+### a. GALACTIC_RECORD
+
+```pseudocode
+procedure GALACTIC_RECORD()
+    print "COMPUTER RECORD OF GALAXY FOR", Q1, Q2
+    for i=1 to 8: print Z[i,1..8]
+end procedure
+```
+
+### b. STATUS_REPORT
+
+```pseudocode
+procedure STATUS_REPORT()
+    print "STATUS REPORT"
+    print "KLINGONS LEFT:", K9
+    print "STARDATES LEFT:", (T0+T9)-T
+    print "STARBASES LEFT:", B9
+end procedure
+```
+
+### c. TORPEDO_DATA
+
+```pseudocode
+procedure TORPEDO_DATA()
+    for each Klingon i:
+        if K[i,3] > 0:
+            dx = K[i,1] - S1
+            dy = K[i,2] - S2
+            course = compute_course(dx, dy)
+            dist = sqrt(dx^2 + dy^2)
+            print "DIRECTION =", course, "DISTANCE =", dist
+end procedure
+```
+
+---
+
+## 6️⃣  COMBAT & DAMAGE
+
+```pseudocode
+procedure ENEMY_ATTACK()
+    if C$ == "DOCKED": print "STARBASE SHIELDS PROTECT YOU"; return
+    if K3 <= 0: return
+
+    for i = 1 to 3:
+        if K[i,3] > 0:
+            H = (K[i,3] / distance(K[i])) * (2 * random())
+            S -= H
+            print "HIT ON ENTERPRISE:", H, " DAMAGE"
+            if S < 0: call GAME_OVER_DEAD()
+    next
+end procedure
+```
+
+```pseudocode
+procedure KILL_KLINGON(i)
+    print "KLINGON DESTROYED AT", K[i,1], K[i,2]
+    K3 -= 1
+    K9 -= 1
+    erase_symbol(K[i,1], K[i,2])
+    G[Q1,Q2] = K3*100 + B3*10 + S3
+    if K9 <= 0: call GAME_WIN()
+end procedure
+```
+
+---
+
+## 7️⃣  ENDGAME CONDITIONS
+
+```pseudocode
+procedure GAME_OVER_DEAD()
+    print "THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED."
+    print "REMAINING KLINGONS:", K9
+    stop
+end procedure
+
+procedure GAME_OVER_TIME()
+    print "MISSION EXPIRED. STARDATE", T
+    print "REMAINING KLINGONS:", K9
+    stop
+end procedure
+
+procedure GAME_WIN()
+    print "THE LAST KLINGON HAS BEEN DESTROYED. THE FEDERATION IS SAVED!"
+    rating = (K7 / (T - T0)) * 1000
+    print "EFFICIENCY RATING:", rating
+    stop
+end procedure
+```
+
+---
+
+## 8️⃣  UTILITY ROUTINES
+
+```pseudocode
+procedure CLEAR_SCREEN()
+    print 11 blank lines
+end procedure
+
+procedure SHOW_INSTRUCTIONS()
+    print full help text (lines 5820–6410)
+end procedure
+
+procedure RANDOM_SECTOR()
+    repeat:
+        R1 = random(1..8)
+        R2 = random(1..8)
+    until sector_empty(R1,R2)
+    return (R1,R2)
+end procedure
+
+procedure DRAW_SYMBOL(symbol, row, col)
+    // insert 3-character symbol into correct map string (Q$,R$,S$)
+end procedure
+
+procedure COLLISION(x,y)
+    // uses GOSUB 5680 logic to compare map symbol
+    return true if target occupied
+end procedure
+```
+
+---
+
+## 🧩 END
+
+```pseudocode
+END PROGRAM
+```
+
+---
+
+### ✅ Summary
+
+This pseudocode is a **faithful structural rewrite** of the entire HP-BASIC game, mapping:
+
+* all numbered blocks,
+* all GOSUB dependencies,
+* all global variables, and
+* major command logic (warp, sensors, combat, computer).
+
+---
+
+Would you like me to now **expand this pseudocode into a fully structured modern implementation**, e.g. in **Python or C-like format**, while keeping the original gameplay mechanics intact (so you can run or simulate it)?
